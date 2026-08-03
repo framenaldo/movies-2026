@@ -353,7 +353,7 @@
         </div>
         <div class="sync-box">
             <div id="statusBadge" class="status-badge">
-                <i class="fa-solid fa-circle-check"></i> <span id="statusText">เชื่อมต่อ Google Sheets สด</span>
+                <i class="fa-solid fa-circle-check"></i> <span id="statusText">กำลังดึงข้อมูล...</span>
             </div>
             <button class="btn-sync" onclick="fetchLiveData()">
                 <i class="fa-solid fa-rotate"></i> Sync ข้อมูล
@@ -373,7 +373,7 @@
         <div class="stat-card">
             <div class="stat-icon"><i class="fa-solid fa-star"></i></div>
             <div class="stat-info">
-                <h3 id="statAvgRating">0.0</h3>
+                <h3 id="statAvgRating">-</h3>
                 <p>คะแนนเฉลี่ย</p>
             </div>
         </div>
@@ -397,6 +397,7 @@
     <div class="controls-panel">
         <div class="year-tabs" id="yearTabs">
             <button class="tab-btn active" onclick="selectYear('ALL')">ทั้งหมด</button>
+            <button class="tab-btn" onclick="selectYear('2026')">2026</button>
             <button class="tab-btn" onclick="selectYear('2025')">2025</button>
             <button class="tab-btn" onclick="selectYear('2024')">2024</button>
             <button class="tab-btn" onclick="selectYear('2023')">2023</button>
@@ -418,6 +419,7 @@
                     <option value="3">⭐⭐⭐ (3 ดาว)</option>
                     <option value="2">⭐⭐ (2 ดาว)</option>
                     <option value="1">⭐ (1 ดาว)</option>
+                    <option value="UNRATED">ยังไม่ได้ให้คะแนน</option>
                 </select>
 
                 <select id="sortSelect" onchange="applyFilters()">
@@ -456,13 +458,15 @@
 </div>
 
 <script>
-    // Google Sheets Link IDs (จากที่ผู้ใช้ระบุ)
+    // Google Sheets Link IDs
+    // นำ ID ของปี 2026 มาใส่แทนที่ข้อความ "ใส่_ID_ของปี_2026_ตรงนี้" ได้เลยครับ
     const SHEET_IDS = {
-        '2021': '1dNxvYfZUN-XBryNf_QB9DnaBM5Fc8TRg4k9Niv1y1hA',
-        '2022': '10uRvpV3fI4tcGmCoTS4cSpCd32wGIEIuR6RpFRh3h68',
+        '2026': '1ZdV8YXXQAqXegMwJl3PpqHItTI6GXyx8RU2ZQmhF7Tg', 
+        '2025': '1dNxvYfZUN-XBryNf_QB9DnaBM5Fc8TRg4k9Niv1y1hA',
+        '2024': '10uRvpV3fI4tcGmCoTS4cSpCd32wGIEIuR6RpFRh3h68',
         '2023': '1TjOzc2WY9VOu-PujXk7QJj-G57Y1hcvPof7i6imsHy0',
-        '2024': '1CTjHtjL3D0P5wn8vq8VX10gvy3xGaLog_Kv-z7kC9Bw',
-        '2025': '1OZBdY4QRWriPuybGGxD4Wk2LomVcuuYCYICaK_b7oKo'
+        '2022': '1CTjHtjL3D0P5wn8vq8VX10gvy3xGaLog_Kv-z7kC9Bw',
+        '2021': '1OZBdY4QRWriPuybGGxD4Wk2LomVcuuYCYICaK_b7oKo'
     };
 
     let allMoviesData = {};
@@ -513,7 +517,8 @@
             const dateWatched = row[4] ? row[4].replace(/^"|"$/g, '').trim() : '-';
             const rawRating = row[5] ? row[5].replace(/^"|"$/g, '').trim() : '';
 
-            let rating = 3;
+            // ถ้ายไม่ได้ใส่ rating ระบบจะเก็บเป็น null
+            let rating = null;
             if (rawRating) {
                 const starMatches = rawRating.match(/[⭐⭐️★]/g);
                 if (starMatches) {
@@ -528,7 +533,7 @@
                 t: title,
                 y: relYear || year,
                 d: dateWatched,
-                r: Math.min(Math.max(rating, 1), 5),
+                r: rating !== null ? Math.min(Math.max(rating, 1), 5) : null,
                 yearWatched: year
             });
         }
@@ -542,9 +547,13 @@
         statusText.innerText = 'กำลังดึงข้อมูลจาก Google Sheets...';
         
         let successCount = 0;
+        const totalSheets = Object.keys(SHEET_IDS).length;
         const fetchedData = {};
 
         for (const [yr, sid] of Object.entries(SHEET_IDS)) {
+            // ข้าม 2026 ไปก่อนถ้ายังไม่ได้ใส่ ID
+            if (sid === 'ใส่_ID_ของปี_2026_ตรงนี้') continue; 
+            
             const url = `https://docs.google.com/spreadsheets/d/${sid}/gviz/tq?tqx=out:csv`;
             try {
                 const res = await fetch(url);
@@ -559,15 +568,17 @@
             }
         }
 
+        allMoviesData = fetchedData;
+        const targetCount = Object.values(SHEET_IDS).filter(id => id !== 'ใส่_ID_ของปี_2026_ตรงนี้').length;
+        
         if (successCount > 0) {
-            allMoviesData = fetchedData;
-            statusText.innerText = `เชื่อมต่อ Google Sheets สำเร็จ (${successCount}/5 ปี)`;
+            statusText.innerText = `เชื่อมต่อ Google Sheets สำเร็จ (${successCount}/${targetCount} ปี)`;
             statusBadge.style.backgroundColor = '#064e3b';
             statusBadge.style.color = '#34d399';
         } else {
-            statusText.innerText = 'ใช้ข้อมูลออฟไลน์สำรอง';
-            statusBadge.style.backgroundColor = '#78350f';
-            statusBadge.style.color = '#fbbf24';
+            statusText.innerText = 'ไม่สามารถดึงข้อมูลได้';
+            statusBadge.style.backgroundColor = '#7f1d1d';
+            statusBadge.style.color = '#f87171';
         }
 
         updateStats();
@@ -599,19 +610,22 @@
             if (activeYear === 'ALL' || activeYear === yr) {
                 allList = allList.concat(list);
             }
-            yearCounts[yr] = list.length;
+            if (list.length > 0) {
+                yearCounts[yr] = list.length;
+            }
         }
 
         document.getElementById('statTotal').innerText = allList.length;
 
-        if (allList.length > 0) {
-            const avg = (allList.reduce((acc, m) => acc + m.r, 0) / allList.length).toFixed(1);
+        const ratedMovies = allList.filter(m => m.r !== null);
+        if (ratedMovies.length > 0) {
+            const avg = (ratedMovies.reduce((acc, m) => acc + m.r, 0) / ratedMovies.length).toFixed(1);
             document.getElementById('statAvgRating').innerText = avg;
 
-            const fiveStars = allList.filter(m => m.r === 5).length;
+            const fiveStars = ratedMovies.filter(m => m.r === 5).length;
             document.getElementById('statFiveStar').innerText = fiveStars;
         } else {
-            document.getElementById('statAvgRating').innerText = '0.0';
+            document.getElementById('statAvgRating').innerText = '-';
             document.getElementById('statFiveStar').innerText = '0';
         }
 
@@ -643,16 +657,20 @@
         }
 
         if (rating !== 'ALL') {
-            movies = movies.filter(m => m.r === parseInt(rating, 10));
+            if (rating === 'UNRATED') {
+                movies = movies.filter(m => m.r === null);
+            } else {
+                movies = movies.filter(m => m.r === parseInt(rating, 10));
+            }
         }
 
         // Sorting
         movies.sort((a, b) => {
-            if (sort === 'RATING_DESC') return b.r - a.r;
-            if (sort === 'RATING_ASC') return a.r - b.r;
+            if (sort === 'RATING_DESC') return (b.r || 0) - (a.r || 0);
+            if (sort === 'RATING_ASC') return (a.r || 0) - (b.r || 0);
             if (sort === 'TITLE_ASC') return a.t.localeCompare(b.t);
             if (sort === 'RELEASE_DESC') return (b.y || 0) - (a.y || 0);
-            return 0; // Default DATE_DESC
+            return 0; // Default DATE_DESC (อิงจากลำดับเดิมใน Sheet)
         });
 
         renderMovies(movies);
@@ -672,7 +690,8 @@
         }
 
         movies.forEach((m, idx) => {
-            const stars = '⭐'.repeat(m.r);
+            // เช็คว่ามีเรตติ้งไหม ถ้าไม่มีให้แสดงเป็น -
+            const starsHTML = m.r !== null ? '⭐'.repeat(m.r) : '<span style="color: var(--text-muted);">-</span>';
             
             // Grid Card
             const card = document.createElement('div');
@@ -686,7 +705,7 @@
                 </div>
                 <div class="movie-meta">
                     <span><i class="fa-regular fa-calendar"></i> ${m.d} (${m.yearWatched})</span>
-                    <span class="stars">${stars}</span>
+                    <span class="stars">${starsHTML}</span>
                 </div>
             `;
             grid.appendChild(card);
@@ -698,7 +717,7 @@
                 <td style="font-weight:600; color:#fff;">${m.t}</td>
                 <td>${m.y}</td>
                 <td>${m.d} (${m.yearWatched})</td>
-                <td><span class="stars">${stars}</span></td>
+                <td><span class="stars">${starsHTML}</span></td>
             `;
             tbody.appendChild(tr);
         });
