@@ -459,7 +459,6 @@
 
 <script>
     // Google Sheets Link IDs
-    // นำ ID ของปี 2026 มาใส่แทนที่ข้อความ "ใส่_ID_ของปี_2026_ตรงนี้" ได้เลยครับ
     const SHEET_IDS = {
         '2026': '1ZdV8YXXQAqXegMwJl3PpqHItTI6GXyx8RU2ZQmhF7Tg', 
         '2025': '1dNxvYfZUN-XBryNf_QB9DnaBM5Fc8TRg4k9Niv1y1hA',
@@ -504,28 +503,57 @@
         return result;
     }
 
+    // Dynamic Header & Column Extraction
     function extractMoviesFromCSV(csvRows, year) {
-        const movies = [];
-        for (let i = 3; i < csvRows.length; i++) {
+        let headerIdx = -1;
+        let colMap = { title: 2, releaseYear: 3, dateWatched: 4, rating: 5 }; // default fallback
+
+        // ค้นหาแถวที่เป็น Header (หัวตาราง) อัตโนมัติ
+        for (let i = 0; i < Math.min(csvRows.length, 6); i++) {
             const row = csvRows[i];
-            if (!row || row.length < 3) continue;
+            if (!row) continue;
+            for (let j = 0; j < row.length; j++) {
+                const cell = row[j].toLowerCase();
+                if (cell.includes('name') || cell.includes('ชื่อเรื่อง') || cell.includes('หนังที่ฉันดู') || cell.includes('title')) {
+                    headerIdx = i;
+                    colMap.title = j;
+                }
+                if (cell.includes('release') || (cell.includes('ปี') && !cell.includes('ดู'))) {
+                    colMap.releaseYear = j;
+                }
+                if (cell.includes('date') || cell.includes('วันที่') || cell.includes('ดู')) {
+                    colMap.dateWatched = j;
+                }
+                if (cell.includes('rating') || cell.includes('score') || cell.includes('เรตติ้ง') || cell.includes('คะแนน') || cell.includes('⭐')) {
+                    colMap.rating = j;
+                }
+            }
+            if (headerIdx !== -1) break;
+        }
+
+        const startRow = headerIdx !== -1 ? headerIdx + 1 : 3;
+        const movies = [];
+
+        for (let i = startRow; i < csvRows.length; i++) {
+            const row = csvRows[i];
+            if (!row || row.length <= Math.max(...Object.values(colMap))) continue;
             
-            const title = row[2] ? row[2].replace(/^"|"$/g, '').trim() : '';
-            if (!title || title === 'Name' || title === 'หนังที่ฉันดู') continue;
+            const title = row[colMap.title] ? row[colMap.title].replace(/^"|"$/g, '').trim() : '';
+            if (!title || title.toLowerCase() === 'name' || title === 'หนังที่ฉันดู' || title === 'ชื่อเรื่อง') continue;
 
-            const relYear = row[3] ? row[3].replace(/^"|"$/g, '').trim() : year;
-            const dateWatched = row[4] ? row[4].replace(/^"|"$/g, '').trim() : '-';
-            const rawRating = row[5] ? row[5].replace(/^"|"$/g, '').trim() : '';
+            const relYear = row[colMap.releaseYear] ? row[colMap.releaseYear].replace(/^"|"$/g, '').trim() : year;
+            const dateWatched = row[colMap.dateWatched] ? row[colMap.dateWatched].replace(/^"|"$/g, '').trim() : '-';
+            const rawRating = row[colMap.rating] ? row[colMap.rating].replace(/^"|"$/g, '').trim() : '';
 
-            // ถ้ายไม่ได้ใส่ rating ระบบจะเก็บเป็น null
             let rating = null;
             if (rawRating) {
+                // นับเฉพาะดาวที่ถูกเติม (Filled Stars)
                 const starMatches = rawRating.match(/[⭐⭐️★]/g);
-                if (starMatches) {
+                if (starMatches && starMatches.length > 0) {
                     rating = starMatches.length;
                 } else {
-                    const num = parseInt(rawRating, 10);
-                    if (!isNaN(num)) rating = num;
+                    const num = parseFloat(rawRating);
+                    if (!isNaN(num)) rating = Math.round(num);
                 }
             }
 
@@ -551,7 +579,6 @@
         const fetchedData = {};
 
         for (const [yr, sid] of Object.entries(SHEET_IDS)) {
-            // ข้าม 2026 ไปก่อนถ้ายังไม่ได้ใส่ ID
             if (sid === 'ใส่_ID_ของปี_2026_ตรงนี้') continue; 
             
             const url = `https://docs.google.com/spreadsheets/d/${sid}/gviz/tq?tqx=out:csv`;
@@ -670,7 +697,7 @@
             if (sort === 'RATING_ASC') return (a.r || 0) - (b.r || 0);
             if (sort === 'TITLE_ASC') return a.t.localeCompare(b.t);
             if (sort === 'RELEASE_DESC') return (b.y || 0) - (a.y || 0);
-            return 0; // Default DATE_DESC (อิงจากลำดับเดิมใน Sheet)
+            return 0; // Default DATE_DESC
         });
 
         renderMovies(movies);
@@ -690,7 +717,6 @@
         }
 
         movies.forEach((m, idx) => {
-            // เช็คว่ามีเรตติ้งไหม ถ้าไม่มีให้แสดงเป็น -
             const starsHTML = m.r !== null ? '⭐'.repeat(m.r) : '<span style="color: var(--text-muted);">-</span>';
             
             // Grid Card
@@ -723,7 +749,6 @@
         });
     }
 
-    // Initialize
     window.onload = () => {
         fetchLiveData();
     };
