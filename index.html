@@ -33,9 +33,7 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        /* ---------------- พื้นหลังมีมิติ (Depth Background) ---------------- */
         body {
-            /* ใส่รูปภาพพื้นหลังธีมภาพยนตร์แบบคลีนๆ */
             background-image: url('https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=2070&auto=format&fit=crop');
             background-size: cover;
             background-position: center;
@@ -46,7 +44,6 @@
             position: relative;
         }
 
-        /* ฟิลเตอร์กระจกครอบทับพื้นหลังให้ตัวหนังสืออ่านง่าย */
         body::before {
             content: '';
             position: fixed;
@@ -62,7 +59,6 @@
             z-index: 1;
         }
 
-        /* ---------------- Utilities (Glass Panel) ---------------- */
         .glass-panel {
             background: var(--glass-bg);
             backdrop-filter: blur(var(--blur-amount)) saturate(150%);
@@ -120,6 +116,16 @@
             color: #0f172a;
             transform: translateY(-2px);
             box-shadow: 0 10px 20px rgba(255, 255, 255, 0.15);
+        }
+        
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+        .btn-danger:hover {
+            background: #ef4444;
+            color: #fff;
         }
 
         /* ---------------- Stats Grid ---------------- */
@@ -316,8 +322,11 @@
             <button class="btn-action" style="background: rgba(16, 185, 129, 0.2); color: #34d399; border-color: rgba(16, 185, 129, 0.3);" onclick="toggleAddForm()">
                 <i class="fa-solid fa-plus"></i> เพิ่มหนัง
             </button>
+            <button class="btn-action btn-danger" onclick="clearImageCache()">
+                <i class="fa-solid fa-broom"></i> ล้างแคชรูปภาพ
+            </button>
             <button class="btn-action" onclick="fetchLiveData()">
-                <i class="fa-solid fa-cloud-arrow-down"></i> ซิงค์ข้อมูล
+                <i class="fa-solid fa-cloud-arrow-down"></i> ดึงข้อมูลชีต
             </button>
         </div>
     </header>
@@ -421,12 +430,24 @@
     let activeView = 'GRID';
     let observer = null;
 
-    // --- ฟังก์ชันล้างวงเล็บชื่อหนังให้ค้นหาเจอ ---
-    function cleanMovieTitle(title) {
-        return title.replace(/\s*\(.*?\)\s*/g, '').trim(); // ลบคำที่อยู่ในวงเล็บ เช่น (Episode III)
+    function clearImageCache() {
+        // ลบเฉพาะข้อมูลที่ขึ้นต้นด้วย meta_ ออกจาก localStorage
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith('meta_')) {
+                keysToRemove.push(key);
+            }
+        }
+        keysToRemove.forEach(k => localStorage.removeItem(k));
+        alert('เคลียร์แคชรูปภาพเรียบร้อยแล้ว! ข้อมูลจะถูกโหลดใหม่');
+        applyFilters(); // บังคับให้เริ่มโหลดรูปใหม่
     }
 
-    // --- ฟังก์ชันเปิดลิงก์ไปยัง IMDb ---
+    function cleanMovieTitle(title) {
+        return title.replace(/\s*\(.*?\)\s*/g, '').trim(); 
+    }
+
     function openIMDB(imdbID, title) {
         if (imdbID && imdbID !== 'N/A') {
             window.open(`https://www.imdb.com/title/${imdbID}/`, '_blank');
@@ -436,29 +457,23 @@
         }
     }
 
-    // --- API Fetching Logic with Caching ---
+    // --- API Fetching: ดึงรูปจาก TMDB ก่อน เพราะไม่ค่อยติด Limit ---
     async function fetchPosterAndRating(rawTitle, year) {
-        const title = cleanMovieTitle(rawTitle); // ใช้ชื่อที่ตัดวงเล็บออกแล้วในการค้นหา
-        const cacheKey = `meta_v4_${title.toLowerCase()}_${year}`; 
-        if (localStorage.getItem(cacheKey)) {
-            return JSON.parse(localStorage.getItem(cacheKey));
+        const title = cleanMovieTitle(rawTitle); 
+        const cacheKey = `meta_v5_${title.toLowerCase()}_${year}`; // เปลี่ยนคีย์ใหม่เพื่อรีเฟรชแคช
+        
+        // ถ้าเคยดึงสำเร็จแล้วให้เอาในแคชมาโชว์เลย
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+            const parsed = JSON.parse(cached);
+            // โหลดใหม่เฉพาะถ้าครั้งก่อนมันได้ค่าว่างมา
+            if (parsed.poster || parsed.rating) return parsed;
         }
 
         let meta = { poster: null, rating: null, source: null, imdbID: null };
 
         try {
-            // 1. ค้นหา OMDb
-            let omdbUrl = `https://www.omdbapi.com/?t=${encodeURIComponent(title)}&apikey=${OMDB_API}`;
-            let omdbRes = await fetch(omdbUrl);
-            let omdbData = await omdbRes.json();
-            
-            if (omdbData.Response === "True") {
-                if (omdbData.Poster && omdbData.Poster !== "N/A") meta.poster = omdbData.Poster;
-                if (omdbData.imdbRating && omdbData.imdbRating !== "N/A") { meta.rating = omdbData.imdbRating; meta.source = 'IMDb'; }
-                meta.imdbID = omdbData.imdbID;
-            }
-
-            // 2. ค้นหา TMDB (เอาภาษา th-TH ออกเพื่อให้หาหนังฝรั่งเจอแม่นขึ้น)
+            // 1. ดึงจาก TMDB ก่อน (โควต้าเยอะกว่า OMDb มาก)
             let tmdbUrl = `https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API}&query=${encodeURIComponent(title)}`;
             let res = await fetch(tmdbUrl);
             let data = await res.json();
@@ -470,11 +485,31 @@
                     if (exactMatch) match = exactMatch;
                 }
                 if (match.poster_path) meta.poster = `https://image.tmdb.org/t/p/w500${match.poster_path}`;
-                if (!meta.rating && match.vote_average > 0) { meta.rating = match.vote_average.toFixed(1); meta.source = 'TMDB'; }
+                if (match.vote_average > 0) { meta.rating = match.vote_average.toFixed(1); meta.source = 'TMDB'; }
+            }
+
+            // 2. ถ้า TMDB ไม่มี ให้หาจาก OMDb เสริม
+            if (!meta.poster || !meta.rating) {
+                let omdbUrl = `https://www.omdbapi.com/?t=${encodeURIComponent(title)}&apikey=${OMDB_API}`;
+                let omdbRes = await fetch(omdbUrl);
+                let omdbData = await omdbRes.json();
+                
+                if (omdbData.Response === "True") {
+                    if (!meta.poster && omdbData.Poster && omdbData.Poster !== "N/A") meta.poster = omdbData.Poster;
+                    if (!meta.rating && omdbData.imdbRating && omdbData.imdbRating !== "N/A") { 
+                        meta.rating = omdbData.imdbRating; 
+                        meta.source = 'IMDb'; 
+                    }
+                    meta.imdbID = omdbData.imdbID;
+                }
             }
         } catch (e) { console.error("API Fetch Error:", e); }
 
-        localStorage.setItem(cacheKey, JSON.stringify(meta));
+        // เซฟลงแคชเฉพาะตอนที่ได้ภาพหรือคะแนนมาแล้ว เพื่อป้องกันการจำค่าที่ผิดพลาด
+        if (meta.poster || meta.rating) {
+            localStorage.setItem(cacheKey, JSON.stringify(meta));
+        }
+        
         return meta;
     }
 
@@ -537,7 +572,7 @@
 
     async function fetchLiveData() {
         const statusText = document.getElementById('statusText');
-        statusText.innerHTML = '<i class="fa-solid fa-rotate fa-spin" style="color:var(--accent-color);"></i> โหลดข้อมูล...';
+        statusText.innerHTML = '<i class="fa-solid fa-rotate fa-spin" style="color:var(--accent-color);"></i> โหลดข้อมูลชีต...';
         
         let savedCustomData = JSON.parse(localStorage.getItem('custom_movies_data')) || {};
         let successCount = 0;
@@ -560,7 +595,7 @@
         }
 
         allMoviesData = fetchedData;
-        statusText.innerHTML = `<i class="fa-solid fa-check" style="color:var(--success-color);"></i> ข้อมูลอัปเดตแล้ว`;
+        statusText.innerHTML = `<i class="fa-solid fa-check" style="color:var(--success-color);"></i> ข้อมูลชีตอัปเดตแล้ว`;
         setTimeout(() => statusText.innerHTML = 'พร้อมใช้งาน', 3000);
 
         updateStats();
@@ -674,7 +709,6 @@
                                 card.querySelector('.poster-placeholder').style.display = 'none';
                             };
                             img.onerror = () => {
-                                // ภาพโหลดไม่สำเร็จ
                                 img.style.display = 'none';
                                 card.querySelector('.poster-placeholder').style.display = 'flex';
                             };
