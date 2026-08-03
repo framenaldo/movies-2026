@@ -503,7 +503,7 @@
         return result;
     }
 
-    // Dynamic Header & Column Extraction with Precise Star Parsing
+    // Dynamic Header & Column Extraction with Smart Star Parser
     function extractMoviesFromCSV(csvRows, year) {
         let headerIdx = -1;
         let colMap = { title: 2, releaseYear: 3, dateWatched: 4, rating: 5 };
@@ -546,57 +546,236 @@
 
             let rating = null;
             if (rawRating) {
-                // กรองเฉพาะดาวทึบ/ดาวสีส้ม (เช่น ⭐, ★, ⭐️) โดยอิงตามรหัส Unicode หรือรูปแบบที่ Google Sheets ส่งมา
-                // ตัวอย่างดาวสีเทา (Unfilled) มักจะอยู่ในรูปแบบ 🫥 หรือมีรหัสที่ต่างกัน หรือถ้าใช้ตัวอักษรเดียวกัน ให้แยกจากตำแหน่งแรกๆ
-                // วิธีที่แม่นยำที่สุดสำหรับ Google Sheets: นับเฉพาะดาวดวงแรกๆ ที่ติดกันก่อนจะเจอช่องว่างหรือดาวสีเทา
-                // หรือเช็คจากตัวอักษรดาวที่มีการระบายสี (มักใช้ ⭐ หรือ ★)
-                // เนื่องจาก Google Sheets ส่ง CSV ออกมาเป็นตัวอักษรดาว ⭐ ทั้งคู่ แต่ดาวสีเทามักต่อท้ายหรือมีรหัสต่างกันเล็กน้อย
-                // เราจะใช้วิธีนับจำนวนดาวที่อยู่ติดกันเป็นกลุ่มแรก หรือแยกคำว่า ⭐ ออกมานับเฉพาะตัวที่มีการเติมสี
-                // หากดาวสีส้มและสีเทาเป็นตัวอักษรเดียวกัน ให้เช็คความยาวหรือตัดส่วนดาวสีเทาออก (มักจะตามหลังดาวสีส้ม)
+                // เนื่องจาก Google Sheets ส่งดาวสีส้มและดาวสีเทามาเป็นตัวอักษร ⭐ ทั้งหมด (ทำให้ความยาวเท่ากับ 5 เสมอ เช่น ⭐⭐⭐○○)
+                // เราจะใช้ความยาวของข้อความดาว หรือเช็คอักขระดาวจริง โดยใน Google Sheets ดาวสีเทามักจะถูกต่อท้าย
+                // หรือวิธีที่แม่นยำที่สุด: นับจำนวนดาวที่แสดงผลจริงโดยตัดส่วนที่จางออก (หรือถ้าความยาวเป็น 5 และมีดาวผสม ให้เทียบความแตกต่าง)
+                // สังเกตว่าถ้าให้ 3 ดาว ข้อความมักจะมีความยาวตัวอักษรดาว 3 ดวง (หรือถ้ามีดาวเทียม/ดาวเทาต่อท้าย ให้ตัดออกโดยนับเฉพาะตัวอักษรที่ซ้ำกันไม่เกิน 5 หรือเช็ค index)
                 
-                // แก้ไขโดยการนับดาวเฉพาะตัวที่อยู่หน้าสุด หรือเทียบความสว่าง/ตัวอักษร
-                // ใน Google Sheets ดาวทึบคือ ⭐ และดาวว่างมักจะเป็น ✰ หรือ ⭐ จางๆ 
-                // ลองใช้RegEx กรองเฉพาะดาวทึบมาตรฐาน (⭐, ⭐️, ★)
-                const filledStars = rawRating.match(/[⭐★]/g);
-                if (filledStars && filledStars.length > 0) {
-                    // ถ้าในช่องมีทั้งดาวทึบและดาวจางติดกัน ให้ตัดเอาเฉพาะดาวกลุ่มแรกที่เป็นดาวทึบ
-                    // หรือดูว่าดาวจางใช้สัญลักษณ์อะไร (เช่น ✰ หรือตัวจาง)
-                    // ถ้าดึงมาแล้วเกิน 5 แสดงว่าติดดาวจางมาด้วย ให้เอาแค่จำนวนที่แท้จริง (ไม่เกิน 5 และมักจะอยู่กลุ่มแรก)
-                    let count = filledStars.length;
-                    // ถ้ามีดาวจางปะปนมา (มักจะทำให้เกิน 5 หรือถ้านับแบบแยก) 
-                    // ให้จำกัดไม่ให้เกิน 5 หรือเช็ค index ของดาวจาง
-                    // วิธีเช็ค: Google Sheets rating มักจะเขียนติดกัน เช่น ⭐⭐⭐✰✰ หรือ ⭐⭐⭐⭐⭐ (ถ้าให้เต็ม) หรือดาวจางใช้ยูนิโค้ดอื่น
-                    rating = Math.min(count, 5);
-                }
-
-                // ป้องกันกรณีดาวสีเทาใช้ตัวอักษรเดียวกัน ทำให้ถูกนับเบิ้ล: 
-                // ให้เช็คว่ามีดาวกี่ดวง ถ้าเกิน 5 ให้หารสอง หรือตัดครึ่ง หรือเช็คความยาวสตริงดาวจริง ๆ 
-                // เนื่องจากดาวสีส้มอยู่หน้า ดาวสีเทาอยู่หลัง หากพิมพ์ 3 ดาว จะได้ ⭐⭐⭐ + ตัวจาง 2 ตัว = ความยาว 5 ตัวอักษรพอดี!
-                // ถ้าเป็นแบบนั้น การนับ `.length` จะได้ 5 เสมอ 
-                // ดังนั้นให้เช็คว่าดาวดวงไหนคือดาวสีส้ม โดยตัดตัวอักษรครึ่งหลังออกไม่ได้ เพราะบางอัน 5 ดาวเต็มก็ยาว 5
-                // วิธีแก้ที่ชัวร์ที่สุดสำหรับ Google Sheets Star Rating: 
-                // ดูว่ามีดาวกี่ดวงที่แสดงผลจริง หรือเช็คค่าตัวเลขหากมีการแปลง
-            }
-
-            // ปรับปรุงการตัดดาวสีเทา (Unfilled stars ใน Google Sheets มักจะเป็น ✰ หรือมีรหัส Hex ต่างกัน หรือต่อท้าย)
-            // ลองใช้โค้ดแยกระดับความแม่นยำของดาว:
-            let finalRating = null;
-            if (rawRating) {
-                // นับเฉพาะดาวทึบจริงๆ โดยตัดดาวจางออก (ดาวจางใน Sheets มักจะใช้สัญลักษณ์ ✰ หรือมี Unicode ต่างกันเล็กน้อย หรือถ้าตัวเดียวกัน ให้เช็คความเข้ม)
-                // หรือใช้การนับจำนวนดาวที่ไม่ใช่ดาวจาง
-                const cleanStars = rawRating.replace(/[✰☆]/g, ''); // ตัดดาวโปร่งออกถ้ามี
-                const starMatches = cleanStars.match(/[⭐★]/g);
-                if (starMatches) {
-                    // ถ้ายังติดดาวจางแบบใช้ตัวอักษรเดียวกัน ให้สังเกตว่าดาวทึบจะอยู่หน้าสุด
-                    // ปกติคนให้ 3 ดาว จะมีดาวทึบ 3 ดวง ตามด้วยดาวจาง 2 ดวง ถ้าตัวอักษรเหมือนกันเป๊ะ ให้ดูว่าดาวจางใน Sheets คือตัวไหน
-                    // ใน Google Sheets ฟังก์ชัน SPARKLINE หรือ IMAGE หรือ ⭐ (Star) ถ้าเป็นดาวว่าง จะเป็น ⭐ จางๆ (opacity ต่ำ) ซึ่งใน CSV จะเป็นตัวอักษร ⭐ เหมือนกัน!
-                    // ดังนั้น ถ้านับ ⭐ ทั้งหมด มันจะได้ 5 เสมอ! นี่คือสาเหตุที่ได้ 5 ดาวตลอดครับ!
+                // ลองแยกนับเฉพาะดาวกลุ่มแรกสุดที่ติดกัน (เช่น ⭐⭐⭐)
+                const starsOnly = rawRating.match(/[⭐★☆✰]/g);
+                if (starsOnly) {
+                    // หากดาวสีส้มและสีเทาเป็นตัวอักษรเดียวกัน ให้ดูว่ามีกี่ดวง ถ้าความยาวรวมเป็น 5 แต่มีดาวบางดวงที่เป็นดาวว่าง 
+                    // ปกติใน Google Sheets ถ้าใช้ formula สร้างดาว จะคืนค่าเป็นตัวอักษรดาวตามจำนวนที่ให้คะแนนจริง (เช่นให้ 3 ดาว จะมีดาวแค่ 3 ตัว ไม่ใช่ 5 ตัว)
+                    // แต่ถ้าใน Sheet คอลัมน์ F มีดาว 5 ดวงเสมอ (3 ส้ม + 2 เทา) ตัว CSV จะมองเห็นเป็น 5 ดวง
+                    // แก้ไขโดย: ถ้ายาว 5 แต่มีดาวสีส้มผสมเทา ให้เช็คว่าตัวอักษรดาวตัวไหนต่างกัน หรือถ้าเหมือนกัน ให้ใช้ความยาวหารครึ่ง/นับเฉพาะกลุ่มแรก
+                    // ลองตัดเฉพาะส่วนที่เป็นดาวทึบกลุ่มแรก:
+                    let starStr = rawRating.replace(/["']/g, '');
+                    // ถ้าใน Sheets พิมพ์ดาว 3 ดวง ก็จะได้ความยาว 3 พอดี แต่ถ้า Sheets ใส่สูตรเต็ม 5 ดวง จะยาว 5
+                    // ให้ตรวจสอบว่าถ้ายาว 5 หรือมากกว่า ให้เช็คว่ามีตัวอักษรซ้ำ หรือถ้าเป็น 3 ดาว ให้เอา 3
+                    // วิธีตัดที่แม่นยำสำหรับเคสนี้: นับจำนวนดาวก่อนที่จะเจอช่องว่างหรือตัวอักษรอื่น
+                    let count = 0;
+                    for (let char of starStr) {
+                        if (char === '⭐' || char === '★' || char === '⭐️') {
+                            count++;
+                        } else {
+                            break;
+                        }
+                    }
+                    if (count > 0 && count <= 5) {
+                        rating = count;
+                    } else if (starStr.length > 0) {
+                        // เผื่อกรณีพิมพ์ตัวเลขตรงๆ
+                        const num = parseInt(starStr, 10);
+                        if (!isNaN(num)) rating = num;
+                    }
                 }
             }
 
-            // วิธีแก้ปัญหา Google Sheets ดาวสีส้ม/สีเทาตัวอักษรเดียวกัน:
-            // ให้เช็คความยาว หรือใช้การตัดสตริงตามคะแนนจริง โดยนับเฉพาะดาวที่อยู่ทางซ้ายสุดก่อนที่จะเปลี่ยนสี 
-            // แต่เนื่องจาก CSV อ่านออกมาเป็นข้อความธรรมดา ให้ดูว่ามีวิธีอื่นไหม เช่น แก้ใน Google Sheets ให้ใส่เป็นตัวเลข (1-5) แทน หรือใช้ Emoji ที่ต่างกัน
-            // แต่ถ้าต้องการให้รองรับดาวใน Sheets ให้ใช้เงื่อนไขตัดข้อความ: หากความยาวดาวคือ 5 ทุกช่อง ให้เช็คว่าช่องไหนให้กี่ดาว หรือดูจากตัวอย่างในรูป (เช่น Alien: Romulus ให้ 3 ดาว, สังเกตว่าใน CSV อาจจะมีค่า rating เป็นตัวเลขซ่อนอยู่ หรือดาวจางมีความต่าง)
+            movies.push({
+                t: title,
+                y: relYear || year,
+                d: dateWatched,
+                r: rating !== null ? Math.min(Math.max(rating, 1), 5) : null,
+                yearWatched: year
+            });
         }
+        return movies;
     }
+
+    // ดึงข้อมูลสดจาก Google Sheets
+    async function fetchLiveData() {
+        const statusBadge = document.getElementById('statusBadge');
+        const statusText = document.getElementById('statusText');
+        statusText.innerText = 'กำลังดึงข้อมูลจาก Google Sheets...';
+        
+        let successCount = 0;
+        const totalSheets = Object.keys(SHEET_IDS).length;
+        const fetchedData = {};
+
+        for (const [yr, sid] of Object.entries(SHEET_IDS)) {
+            if (sid === 'ใส่_ID_ของปี_2026_ตรงนี้') continue; 
+            
+            const url = `https://docs.google.com/spreadsheets/d/${sid}/gviz/tq?tqx=out:csv`;
+            try {
+                const res = await fetch(url);
+                if (res.ok) {
+                    const csvText = await res.text();
+                    const rows = parseCSV(csvText);
+                    fetchedData[yr] = extractMoviesFromCSV(rows, yr);
+                    successCount++;
+                }
+            } catch (err) {
+                console.warn(`Fetch error for year ${yr}:`, err);
+            }
+        }
+
+        allMoviesData = fetchedData;
+        const targetCount = Object.values(SHEET_IDS).filter(id => id !== 'ใส่_ID_ของปี_2026_ตรงนี้').length;
+        
+        if (successCount > 0) {
+            statusText.innerText = `เชื่อมต่อ Google Sheets สำเร็จ (${successCount}/${targetCount} ปี)`;
+            statusBadge.style.backgroundColor = '#064e3b';
+            statusBadge.style.color = '#34d399';
+        } else {
+            statusText.innerText = 'ไม่สามารถดึงข้อมูลได้';
+            statusBadge.style.backgroundColor = '#7f1d1d';
+            statusBadge.style.color = '#f87171';
+        }
+
+        updateStats();
+        applyFilters();
+    }
+
+    function selectYear(yr) {
+        activeYear = yr;
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.innerText === (yr === 'ALL' ? 'ทั้งหมด' : yr));
+        });
+        applyFilters();
+    }
+
+    function switchView(view) {
+        activeView = view;
+        document.getElementById('btnGridView').classList.toggle('active', view === 'GRID');
+        document.getElementById('btnTableView').classList.toggle('active', view === 'TABLE');
+        
+        document.getElementById('moviesGrid').style.display = view === 'GRID' ? 'grid' : 'none';
+        document.getElementById('tableWrapper').style.display = view === 'TABLE' ? 'block' : 'none';
+    }
+
+    function updateStats() {
+        let allList = [];
+        const yearCounts = {};
+
+        for (const [yr, list] of Object.entries(allMoviesData)) {
+            if (activeYear === 'ALL' || activeYear === yr) {
+                allList = allList.concat(list);
+            }
+            if (list.length > 0) {
+                yearCounts[yr] = list.length;
+            }
+        }
+
+        document.getElementById('statTotal').innerText = allList.length;
+
+        const ratedMovies = allList.filter(m => m.r !== null);
+        if (ratedMovies.length > 0) {
+            const avg = (ratedMovies.reduce((acc, m) => acc + m.r, 0) / ratedMovies.length).toFixed(1);
+            document.getElementById('statAvgRating').innerText = avg;
+
+            const fiveStars = ratedMovies.filter(m => m.r === 5).length;
+            document.getElementById('statFiveStar').innerText = fiveStars;
+        } else {
+            document.getElementById('statAvgRating').innerText = '-';
+            document.getElementById('statFiveStar').innerText = '0';
+        }
+
+        let maxYr = '-';
+        let maxCount = 0;
+        for (const [yr, count] of Object.entries(yearCounts)) {
+            if (count > maxCount) {
+                maxCount = count;
+                maxYr = `${yr} (${count} เรื่อง)`;
+            }
+        }
+        document.getElementById('statTopYear').innerText = maxYr;
+    }
+
+    function applyFilters() {
+        let movies = [];
+        for (const [yr, list] of Object.entries(allMoviesData)) {
+            if (activeYear === 'ALL' || activeYear === yr) {
+                movies = movies.concat(list);
+            }
+        }
+
+        const search = document.getElementById('searchInput').value.toLowerCase();
+        const rating = document.getElementById('ratingFilter').value;
+        const sort = document.getElementById('sortSelect').value;
+
+        if (search) {
+            movies = movies.filter(m => m.t.toLowerCase().includes(search));
+        }
+
+        if (rating !== 'ALL') {
+            if (rating === 'UNRATED') {
+                movies = movies.filter(m => m.r === null);
+            } else {
+                movies = movies.filter(m => m.r === parseInt(rating, 10));
+            }
+        }
+
+        // Sorting
+        movies.sort((a, b) => {
+            if (sort === 'RATING_DESC') return (b.r || 0) - (a.r || 0);
+            if (sort === 'RATING_ASC') return (a.r || 0) - (b.r || 0);
+            if (sort === 'TITLE_ASC') return a.t.localeCompare(b.t);
+            if (sort === 'RELEASE_DESC') return (b.y || 0) - (a.y || 0);
+            return 0; // Default DATE_DESC
+        });
+
+        renderMovies(movies);
+    }
+
+    function renderMovies(movies) {
+        const grid = document.getElementById('moviesGrid');
+        const tbody = document.getElementById('movieTableBody');
+        grid.innerHTML = '';
+        tbody.innerHTML = '';
+
+        if (movies.length === 0) {
+            const emptyHTML = '<div class="empty-state"><i class="fa-solid fa-film-slash fa-2x"></i><p style="margin-top:10px;">ไม่พบรายการภาพยนตร์</p></div>';
+            grid.innerHTML = emptyHTML;
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">${emptyHTML}</td></tr>`;
+            return;
+        }
+
+        movies.forEach((m, idx) => {
+            const starsHTML = m.r !== null ? '⭐'.repeat(m.r) : '<span style="color: var(--text-muted);">-</span>';
+            
+            // Grid Card
+            const card = document.createElement('div');
+            card.className = 'movie-card';
+            card.innerHTML = `
+                <div>
+                    <div class="movie-header">
+                        <div class="movie-title">${m.t}</div>
+                        <span class="release-year">${m.y}</span>
+                    </div>
+                </div>
+                <div class="movie-meta">
+                    <span><i class="fa-regular fa-calendar"></i> ${m.d} (${m.yearWatched})</span>
+                    <span class="stars">${starsHTML}</span>
+                </div>
+            `;
+            grid.appendChild(card);
+
+            // Table Row
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${idx + 1}</td>
+                <td style="font-weight:600; color:#fff;">${m.t}</td>
+                <td>${m.y}</td>
+                <td>${m.d} (${m.yearWatched})</td>
+                <td><span class="stars">${starsHTML}</span></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    window.onload = () => {
+        fetchLiveData();
+    };
+</script>
+</body>
+</html>
