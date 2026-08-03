@@ -1,553 +1,713 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Movies I've Watched</title>
-  <style>
-    :root {
-      --bg-color: #0f172a;
-      --card-bg: #1e293b;
-      --accent-color: #6366f1;
-      --accent-hover: #4f46e5;
-      --text-main: #f8fafc;
-      --text-muted: #94a3b8;
-      --border-color: #334155;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movies I've Watched Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --accent-color: #3b82f6;
+            --star-color: #f59e0b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+        }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
 
-    body {
-      background-color: var(--bg-color);
-      color: var(--text-main);
-      padding: 2rem 1rem;
-      display: flex;
-      justify-content: center;
-    }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding: 20px;
+            min-height: 100vh;
+        }
 
-    .container {
-      width: 100%;
-      max-width: 900px;
-    }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
 
-    header {
-      margin-bottom: 1.5rem;
-      text-align: center;
-    }
+        /* Header & Status */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
 
-    header h1 {
-      font-size: 2.2rem;
-      margin-bottom: 0.5rem;
-      color: #ffffff;
-    }
+        .logo-title h1 {
+            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #ffffff;
+        }
 
-    header p {
-      color: var(--text-muted);
-    }
+        .logo-title h1 i {
+            color: var(--accent-color);
+        }
 
-    /* แท็บเมนูเลือกปี */
-    .year-nav {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 0.5rem;
-      margin-bottom: 2rem;
-      flex-wrap: wrap;
-    }
+        .sync-box {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
 
-    .year-btn {
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      color: var(--text-muted);
-      padding: 0.52rem 1.25rem;
-      border-radius: 20px;
-      font-weight: 600;
-      font-size: 0.95rem;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
+        .status-badge {
+            font-size: 0.85rem;
+            padding: 6px 12px;
+            border-radius: 20px;
+            background-color: #064e3b;
+            color: #34d399;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
 
-    .year-btn:hover {
-      border-color: var(--accent-color);
-      color: var(--text-main);
-    }
+        .btn-sync {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
 
-    .year-btn.active {
-      background: var(--accent-color);
-      border-color: var(--accent-color);
-      color: #ffffff;
-      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
-    }
+        .btn-sync:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
 
-    .btn-sync {
-      background: rgba(99, 102, 241, 0.15);
-      border: 1px solid var(--accent-color);
-      color: #a5b4fc;
-      padding: 0.52rem 1rem;
-      border-radius: 20px;
-      cursor: pointer;
-      font-size: 0.85rem;
-      font-weight: 600;
-      transition: all 0.2s;
-    }
+        /* Stat Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
 
-    .btn-sync:hover {
-      background: var(--accent-color);
-      color: #ffffff;
-    }
+        .stat-card {
+            background-color: var(--card-bg);
+            padding: 18px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
 
-    /* กล่องสถิติ */
-    .stats-bar {
-      display: flex;
-      gap: 1rem;
-      margin-bottom: 2rem;
-    }
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--accent-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+        }
 
-    .stat-card {
-      flex: 1;
-      background: var(--card-bg);
-      padding: 1rem;
-      border-radius: 12px;
-      border: 1px solid var(--border-color);
-      text-align: center;
-    }
+        .stat-info h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
 
-    .stat-card .value {
-      font-size: 1.8rem;
-      font-weight: bold;
-      color: var(--accent-color);
-    }
+        .stat-info p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
 
-    .stat-card .label {
-      font-size: 0.85rem;
-      color: var(--text-muted);
-    }
+        /* Controls Section */
+        .controls-panel {
+            background-color: var(--card-bg);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
 
-    /* ฟอร์มกรอกข้อมูล */
-    .form-container {
-      background: var(--card-bg);
-      padding: 1.5rem;
-      border-radius: 12px;
-      border: 1px solid var(--border-color);
-      margin-bottom: 2rem;
-    }
+        .year-tabs {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+        }
 
-    .form-container h2 {
-      font-size: 1.2rem;
-      margin-bottom: 1rem;
-    }
+        .tab-btn {
+            background-color: #334155;
+            color: var(--text-main);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            white-space: nowrap;
+            transition: background 0.2s;
+        }
 
-    .form-grid {
-      display: grid;
-      grid-template-columns: 2fr 1fr 1fr 1fr auto;
-      gap: 0.75rem;
-      align-items: end;
-    }
+        .tab-btn.active, .tab-btn:hover {
+            background-color: var(--accent-color);
+        }
 
-    @media (max-width: 768px) {
-      .form-grid {
-        grid-template-columns: 1fr;
-      }
-    }
+        .filter-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+        }
 
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 0.35rem;
-    }
+        .search-box {
+            position: relative;
+            flex: 1;
+            min-width: 240px;
+        }
 
-    .form-group label {
-      font-size: 0.85rem;
-      color: var(--text-muted);
-    }
+        .search-box input {
+            width: 100%;
+            padding: 10px 12px 10px 38px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background-color: #0f172a;
+            color: var(--text-main);
+            outline: none;
+        }
 
-    input, select {
-      background: var(--bg-color);
-      border: 1px solid var(--border-color);
-      color: var(--text-main);
-      padding: 0.6rem 0.8rem;
-      border-radius: 6px;
-      font-size: 0.95rem;
-      outline: none;
-    }
+        .search-box i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
 
-    input:focus, select:focus {
-      border-color: var(--accent-color);
-    }
+        .filter-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
 
-    button.btn-add {
-      background: var(--accent-color);
-      color: white;
-      border: none;
-      padding: 0.65rem 1.2rem;
-      border-radius: 6px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
+        select {
+            padding: 9px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background-color: #0f172a;
+            color: var(--text-main);
+            outline: none;
+            cursor: pointer;
+        }
 
-    button.btn-add:hover {
-      background: var(--accent-hover);
-    }
+        .view-btn-group {
+            display: flex;
+            background-color: #0f172a;
+            border-radius: 8px;
+            padding: 2px;
+            border: 1px solid var(--border-color);
+        }
 
-    /* ตารางแสดงรายการ */
-    .table-container {
-      background: var(--card-bg);
-      border-radius: 12px;
-      border: 1px solid var(--border-color);
-      overflow-x: auto;
-    }
+        .view-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      text-align: left;
-    }
+        .view-btn.active {
+            background-color: var(--accent-color);
+            color: white;
+        }
 
-    th, td {
-      padding: 0.9rem 1.2rem;
-      border-bottom: 1px solid var(--border-color);
-    }
+        /* Movie Grid & Cards */
+        .movies-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 18px;
+        }
 
-    th {
-      background: rgba(0, 0, 0, 0.2);
-      color: var(--text-muted);
-      font-size: 0.85rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
+        .movie-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
 
-    tr:last-child td {
-      border-bottom: none;
-    }
+        .movie-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
 
-    tr:hover td {
-      background: rgba(255, 255, 255, 0.02);
-    }
+        .movie-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
 
-    .rating-stars {
-      color: #f59e0b;
-      letter-spacing: 2px;
-    }
+        .movie-title {
+            font-size: 1.05rem;
+            font-weight: 600;
+            line-height: 1.4;
+            color: #ffffff;
+        }
 
-    .btn-delete {
-      background: transparent;
-      color: #ef4444;
-      border: none;
-      cursor: pointer;
-      font-size: 1rem;
-      padding: 0.2rem 0.5rem;
-      border-radius: 4px;
-    }
+        .release-year {
+            font-size: 0.8rem;
+            background-color: #334155;
+            padding: 2px 8px;
+            border-radius: 12px;
+            color: var(--text-muted);
+            margin-left: 8px;
+            white-space: nowrap;
+        }
 
-    .btn-delete:hover {
-      background: rgba(239, 68, 68, 0.1);
-    }
+        .movie-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
 
-    .empty-state {
-      text-align: center;
-      padding: 3rem 1rem;
-      color: var(--text-muted);
-    }
+        .stars {
+            color: var(--star-color);
+            letter-spacing: 2px;
+        }
 
-    .status-badge {
-      font-size: 0.8rem;
-      padding: 0.2rem 0.6rem;
-      border-radius: 12px;
-      margin-left: 0.5rem;
-      vertical-align: middle;
-      background: rgba(34, 197, 94, 0.2);
-      color: #4ade80;
-      border: 1px solid rgba(34, 197, 94, 0.4);
-    }
-  </style>
+        /* Table View */
+        .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            display: none;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th, td {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: #0f172a;
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        tr:hover {
+            background-color: rgba(255,255,255,0.02);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 50px;
+            color: var(--text-muted);
+            grid-column: 1 / -1;
+        }
+    </style>
 </head>
 <body>
 
-  <div class="container">
+<div class="container">
+    <!-- Header -->
     <header>
-      <h1 id="page-title">🎬 Movies I've Watched</h1>
-      <p>รายการบันทึกภาพยนตร์ที่รับชมแล้ว <span id="sync-status" class="status-badge">Live Sync</span></p>
+        <div class="logo-title">
+            <h1><i class="fa-solid fa-film"></i> Movies Watched Tracker</h1>
+        </div>
+        <div class="sync-box">
+            <div id="statusBadge" class="status-badge">
+                <i class="fa-solid fa-circle-check"></i> <span id="statusText">เชื่อมต่อ Google Sheets สด</span>
+            </div>
+            <button class="btn-sync" onclick="fetchLiveData()">
+                <i class="fa-solid fa-rotate"></i> Sync ข้อมูล
+            </button>
+        </div>
     </header>
 
-    <!-- แท็บเลือกปี -->
-    <div class="year-nav" id="year-nav"></div>
-
-    <!-- สถิติ -->
-    <div class="stats-bar">
-      <div class="stat-card">
-        <div class="value" id="total-count">0</div>
-        <div class="label">จำนวนเรื่องทั้งหมด</div>
-      </div>
-      <div class="stat-card">
-        <div class="value" id="avg-rating">0.0</div>
-        <div class="label">คะแนนเฉลี่ย</div>
-      </div>
+    <!-- Stats -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-clapperboard"></i></div>
+            <div class="stat-info">
+                <h3 id="statTotal">0</h3>
+                <p>จำนวนหนังทั้งหมด</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-star"></i></div>
+            <div class="stat-info">
+                <h3 id="statAvgRating">0.0</h3>
+                <p>คะแนนเฉลี่ย</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-trophy"></i></div>
+            <div class="stat-info">
+                <h3 id="statFiveStar">0</h3>
+                <p>หนัง 5 ดาว (สุดยอด)</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-calendar-days"></i></div>
+            <div class="stat-info">
+                <h3 id="statTopYear">-</h3>
+                <p>ปีที่ดูหนังมากที่สุด</p>
+            </div>
+        </div>
     </div>
 
-    <!-- ฟอร์มกรอกข้อมูล -->
-    <div class="form-container">
-      <h2 id="form-title">➕ เพิ่มภาพยนตร์ที่ดูแล้ว</h2>
-      <form id="movie-form" class="form-grid">
-        <div class="form-group">
-          <label for="title">ชื่อภาพยนตร์</label>
-          <input type="text" id="title" placeholder="เช่น Avatar 3" required>
+    <!-- Controls -->
+    <div class="controls-panel">
+        <div class="year-tabs" id="yearTabs">
+            <button class="tab-btn active" onclick="selectYear('ALL')">ทั้งหมด</button>
+            <button class="tab-btn" onclick="selectYear('2025')">2025</button>
+            <button class="tab-btn" onclick="selectYear('2024')">2024</button>
+            <button class="tab-btn" onclick="selectYear('2023')">2023</button>
+            <button class="tab-btn" onclick="selectYear('2022')">2022</button>
+            <button class="tab-btn" onclick="selectYear('2021')">2021</button>
         </div>
-        <div class="form-group">
-          <label for="release-year">ปีที่ฉาย</label>
-          <input type="number" id="release-year" placeholder="2026" min="1900" max="2100" required>
+
+        <div class="filter-row">
+            <div class="search-box">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="searchInput" placeholder="ค้นหาชื่อหนัง..." oninput="applyFilters()">
+            </div>
+            
+            <div class="filter-group">
+                <select id="ratingFilter" onchange="applyFilters()">
+                    <option value="ALL">คะแนนทั้งหมด</option>
+                    <option value="5">⭐⭐⭐⭐⭐ (5 ดาว)</option>
+                    <option value="4">⭐⭐⭐⭐ (4 ดาว)</option>
+                    <option value="3">⭐⭐⭐ (3 ดาว)</option>
+                    <option value="2">⭐⭐ (2 ดาว)</option>
+                    <option value="1">⭐ (1 ดาว)</option>
+                </select>
+
+                <select id="sortSelect" onchange="applyFilters()">
+                    <option value="DATE_DESC">ดูล่าสุดก่อน</option>
+                    <option value="RATING_DESC">คะแนนสูงสุดก่อน</option>
+                    <option value="RATING_ASC">คะแนนน้อยสุดก่อน</option>
+                    <option value="TITLE_ASC">ชื่อหนัง (A-Z)</option>
+                    <option value="RELEASE_DESC">ปีที่ฉาย (ใหม่-เก่า)</option>
+                </select>
+
+                <div class="view-btn-group">
+                    <button class="view-btn active" id="btnGridView" onclick="switchView('GRID')"><i class="fa-solid fa-border-all"></i></button>
+                    <button class="view-btn" id="btnTableView" onclick="switchView('TABLE')"><i class="fa-solid fa-list"></i></button>
+                </div>
+            </div>
         </div>
-        <div class="form-group">
-          <label for="date-watched">วันที่ดู</label>
-          <input type="text" id="date-watched" placeholder="เช่น Aug 10" required>
-        </div>
-        <div class="form-group">
-          <label for="rating">คะแนน</label>
-          <select id="rating" required>
-            <option value="5">⭐️⭐️⭐️⭐️⭐️ (5)</option>
-            <option value="4">⭐️⭐️⭐️⭐️ (4)</option>
-            <option value="3" selected>⭐️⭐️⭐️ (3)</option>
-            <option value="2">⭐️⭐️ (2)</option>
-            <option value="1">⭐️ (1)</option>
-          </select>
-        </div>
-        <button type="submit" class="btn-add">เพิ่ม</button>
-      </form>
     </div>
 
-    <!-- ตารางแสดงรายการ -->
-    <div class="table-container">
-      <table>
-        <thead>
-          <tr>
-            <th style="width: 50px;">#</th>
-            <th>ชื่อภาพยนตร์</th>
-            <th>ปีที่ฉาย</th>
-            <th>วันที่ดู</th>
-            <th>คะแนน</th>
-            <th style="width: 50px;"></th>
-          </tr>
-        </thead>
-        <tbody id="movie-list"></tbody>
-      </table>
+    <!-- Movie Display Container -->
+    <div id="moviesGrid" class="movies-grid"></div>
+    
+    <div id="tableWrapper" class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>ชื่อเรื่อง (Name)</th>
+                    <th>ปีที่ฉาย</th>
+                    <th>วันที่ดู</th>
+                    <th>เรตติ้ง</th>
+                </tr>
+            </thead>
+            <tbody id="movieTableBody"></tbody>
+        </table>
     </div>
-  </div>
+</div>
 
-  <script>
-    // 🔗 การจับคู่ปี กับ Sheet ID ของ Google Sheets ทั้ง 5 ลิงก์ที่คุณส่งมา
-    // (คุณสามารถแก้ไขตัวเลขปี "2025", "2024", ... ให้ตรงกับลำดับไฟล์จริงได้เลยครับ)
-    const sheetMap = {
-      "2026": "LOCAL", // ข้อมูลปี 2026 ฝังในระบบ
-      "2025": "1dNxvYfZUN-XBryNf_QB9DnaBM5Fc8TRg4k9Niv1y1hA",
-      "2024": "10uRvpV3fI4tcGmCoTS4cSpCd32wGIEIuR6RpFRh3h68",
-      "2023": "1TjOzc2WY9VOu-PujXk7QJj-G57Y1hcvPof7i6imsHy0",
-      "2022": "1CTjHtjL3D0P5wn8vq8VX10gvy3xGaLog_Kv-z7kC9Bw",
-      "2021": "1OZBdY4QRWriPuybGGxD4Wk2LomVcuuYCYICaK_b7oKo"
+<script>
+    // Google Sheets Link IDs (จากที่ผู้ใช้ระบุ)
+    const SHEET_IDS = {
+        '2021': '1dNxvYfZUN-XBryNf_QB9DnaBM5Fc8TRg4k9Niv1y1hA',
+        '2022': '10uRvpV3fI4tcGmCoTS4cSpCd32wGIEIuR6RpFRh3h68',
+        '2023': '1TjOzc2WY9VOu-PujXk7QJj-G57Y1hcvPof7i6imsHy0',
+        '2024': '1CTjHtjL3D0P5wn8vq8VX10gvy3xGaLog_Kv-z7kC9Bw',
+        '2025': '1OZBdY4QRWriPuybGGxD4Wk2LomVcuuYCYICaK_b7oKo'
     };
 
-    const initialDataByYear = {
-      "2026": [
-        { id: 1, title: "Jurassic World: Rebirth", releaseYear: 2025, dateWatched: "Jan 18", rating: 2 },
-        { id: 2, title: "One Battle After Another", releaseYear: 2025, dateWatched: "Jan 18", rating: 3 },
-        { id: 3, title: "It Was Just an Accident", releaseYear: 2025, dateWatched: "Jan 23", rating: 3 },
-        { id: 4, title: "Train Dreams", releaseYear: 2025, dateWatched: "Feb 3", rating: 4 },
-        { id: 5, title: "The Secret Agent", releaseYear: 2025, dateWatched: "Feb 5", rating: 3 },
-        { id: 6, title: "28 Years Later", releaseYear: 2025, dateWatched: "Feb 9", rating: 2 },
-        { id: 7, title: "Sentimental Value", releaseYear: 2025, dateWatched: "Feb 14", rating: 3 },
-        { id: 8, title: "Hamnet", releaseYear: 2025, dateWatched: "Feb 19", rating: 4 },
-        { id: 9, title: "Bugonia", releaseYear: 2025, dateWatched: "Mar 3", rating: 4 },
-        { id: 10, title: "The Voice of Hind Rajab", releaseYear: 2025, dateWatched: "Mar 5", rating: 4 },
-        { id: 11, title: "Marty Supreme", releaseYear: 2025, dateWatched: "Mar 12", rating: 4 },
-        { id: 12, title: "Zootopia 2", releaseYear: 2025, dateWatched: "Mar 15", rating: 3 },
-        { id: 13, title: "Hoppers", releaseYear: 2026, dateWatched: "Mar 15", rating: 3 },
-        { id: 14, title: "Project Hail Mary", releaseYear: 2026, dateWatched: "Mar 21", rating: 3 },
-        { id: 15, title: "The Super Mario Galaxy Movie", releaseYear: 2026, dateWatched: "Apr 5", rating: 3 },
-        { id: 16, title: "Michael", releaseYear: 2026, dateWatched: "Apr 25", rating: 3 },
-        { id: 17, title: "28 Years Later: The Bone Temple", releaseYear: 2026, dateWatched: "Apr 27", rating: 3 },
-        { id: 18, title: "Star Wars: The Mandalorian and Grogu", releaseYear: 2026, dateWatched: "May 21", rating: 3 },
-        { id: 19, title: "On the Waterfront", releaseYear: 1954, dateWatched: "May 24", rating: 4 },
-        { id: 20, title: "Power Ballad", releaseYear: 2026, dateWatched: "Jun 13", rating: 3 },
-        { id: 21, title: "Supergirl", releaseYear: 2026, dateWatched: "Jun 24", rating: 2 },
-        { id: 22, title: "The Odyssey", releaseYear: 2026, dateWatched: "Jul 16", rating: 5 },
-        { id: 23, title: "Spider-Man: Brand New Day", releaseYear: 2026, dateWatched: "Jul 30", rating: 3 }
-      ]
-    };
+    let allMoviesData = {};
+    let activeYear = 'ALL';
+    let activeView = 'GRID';
 
-    let allMoviesData = JSON.parse(localStorage.getItem('movies_all_years')) || initialDataByYear;
-    let currentYear = "2026";
-
-    const yearNavEl = document.getElementById('year-nav');
-    const pageTitleEl = document.getElementById('page-title');
-    const formTitleEl = document.getElementById('form-title');
-    const movieListEl = document.getElementById('movie-list');
-    const movieForm = document.getElementById('movie-form');
-    const totalCountEl = document.getElementById('total-count');
-    const avgRatingEl = document.getElementById('avg-rating');
-    const releaseYearInput = document.getElementById('release-year');
-
-    function renderYearTabs() {
-      yearNavEl.innerHTML = '';
-      const years = Object.keys(sheetMap).sort((a, b) => b - a);
-
-      years.forEach(year => {
-        const btn = document.createElement('button');
-        btn.className = `year-btn ${year === currentYear ? 'active' : ''}`;
-        btn.textContent = year;
-        btn.onclick = () => switchYear(year);
-        yearNavEl.appendChild(btn);
-      });
-
-      const syncBtn = document.createElement('button');
-      syncBtn.className = 'btn-sync';
-      syncBtn.innerHTML = '🔄 ดึงข้อมูลจาก Sheets';
-      syncBtn.onclick = () => loadSheetDataForCurrentYear(true);
-      yearNavEl.appendChild(syncBtn);
-    }
-
-    function parseCSV(csvText) {
-      const lines = csvText.trim().split(/\r?\n/);
-      if (lines.length <= 1) return [];
-      
-      const movies = [];
-      for (let i = 1; i < lines.length; i++) {
-        const cols = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/^"|"$/g, '').trim());
-        if (cols.length >= 4 && cols[1]) {
-          const rawRating = cols[4] || cols[3] || "3";
-          let numRating = parseInt(rawRating.replace(/\D/g, '')) || 3;
-          if (rawRating.includes('⭐') || rawRating.includes('⭐️')) {
-            numRating = (rawRating.match(/⭐|⭐️/g) || []).length || numRating;
-          }
-          movies.push({
-            id: Date.now() + i,
-            title: cols[1] || cols[0],
-            releaseYear: cols[2] || currentYear,
-            dateWatched: cols[3] || "-",
-            rating: Math.min(Math.max(numRating, 1), 5)
-          });
+    // CSV Parser Logic
+    function parseCSV(text) {
+        const lines = text.split(/\r\n|\n/);
+        const result = [];
+        for (let line of lines) {
+            if (!line.trim()) continue;
+            let row = [];
+            let insideQuotes = false;
+            let entry = '';
+            for (let i = 0; i < line.length; i++) {
+                let char = line[i];
+                if (char === '"') {
+                    if (insideQuotes && line[i+1] === '"') {
+                        entry += '"';
+                        i++;
+                    } else {
+                        insideQuotes = !insideQuotes;
+                    }
+                } else if (char === ',' && !insideQuotes) {
+                    row.push(entry.trim());
+                    entry = '';
+                } else {
+                    entry += char;
+                }
+            }
+            row.push(entry.trim());
+            result.push(row);
         }
-      }
-      return movies;
+        return result;
     }
 
-    async function loadSheetDataForCurrentYear(forceRefresh = false) {
-      const sheetId = sheetMap[currentYear];
-      if (!sheetId || sheetId === "LOCAL") {
-        renderMovies();
-        return;
-      }
+    function extractMoviesFromCSV(csvRows, year) {
+        const movies = [];
+        for (let i = 3; i < csvRows.length; i++) {
+            const row = csvRows[i];
+            if (!row || row.length < 3) continue;
+            
+            const title = row[2] ? row[2].replace(/^"|"$/g, '').trim() : '';
+            if (!title || title === 'Name' || title === 'หนังที่ฉันดู') continue;
 
-      if (allMoviesData[currentYear] && allMoviesData[currentYear].length > 0 && !forceRefresh) {
-        renderMovies();
-        return;
-      }
+            const relYear = row[3] ? row[3].replace(/^"|"$/g, '').trim() : year;
+            const dateWatched = row[4] ? row[4].replace(/^"|"$/g, '').trim() : '-';
+            const rawRating = row[5] ? row[5].replace(/^"|"$/g, '').trim() : '';
 
-      movieListEl.innerHTML = `<tr><td colspan="6" class="empty-state">⏳ กำลังโหลดข้อมูลจาก Google Sheets ของปี ${currentYear}...</td></tr>`;
+            let rating = 3;
+            if (rawRating) {
+                const starMatches = rawRating.match(/[⭐⭐️★]/g);
+                if (starMatches) {
+                    rating = starMatches.length;
+                } else {
+                    const num = parseInt(rawRating, 10);
+                    if (!isNaN(num)) rating = num;
+                }
+            }
 
-      try {
-        const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv`;
-        const res = await fetch(url);
-        if (!res.ok) throw new Error("Network response was not ok");
-        const csvText = await res.text();
-        const parsedMovies = parseCSV(csvText);
-
-        if (parsedMovies.length > 0) {
-          allMoviesData[currentYear] = parsedMovies;
-          localStorage.setItem('movies_all_years', JSON.stringify(allMoviesData));
+            movies.push({
+                t: title,
+                y: relYear || year,
+                d: dateWatched,
+                r: Math.min(Math.max(rating, 1), 5),
+                yearWatched: year
+            });
         }
-        renderMovies();
-      } catch (err) {
-        console.error("Error loading sheet:", err);
-        renderMovies();
-      }
+        return movies;
     }
 
-    function switchYear(year) {
-      currentYear = year;
-      renderYearTabs();
-      loadSheetDataForCurrentYear();
+    // ดึงข้อมูลสดจาก Google Sheets
+    async function fetchLiveData() {
+        const statusBadge = document.getElementById('statusBadge');
+        const statusText = document.getElementById('statusText');
+        statusText.innerText = 'กำลังดึงข้อมูลจาก Google Sheets...';
+        
+        let successCount = 0;
+        const fetchedData = {};
+
+        for (const [yr, sid] of Object.entries(SHEET_IDS)) {
+            const url = `https://docs.google.com/spreadsheets/d/${sid}/gviz/tq?tqx=out:csv`;
+            try {
+                const res = await fetch(url);
+                if (res.ok) {
+                    const csvText = await res.text();
+                    const rows = parseCSV(csvText);
+                    fetchedData[yr] = extractMoviesFromCSV(rows, yr);
+                    successCount++;
+                }
+            } catch (err) {
+                console.warn(`Fetch error for year ${yr}:`, err);
+            }
+        }
+
+        if (successCount > 0) {
+            allMoviesData = fetchedData;
+            statusText.innerText = `เชื่อมต่อ Google Sheets สำเร็จ (${successCount}/5 ปี)`;
+            statusBadge.style.backgroundColor = '#064e3b';
+            statusBadge.style.color = '#34d399';
+        } else {
+            statusText.innerText = 'ใช้ข้อมูลออฟไลน์สำรอง';
+            statusBadge.style.backgroundColor = '#78350f';
+            statusBadge.style.color = '#fbbf24';
+        }
+
+        updateStats();
+        applyFilters();
     }
 
-    function getStars(rating) {
-      return '⭐️'.repeat(rating);
-    }
-
-    function renderMovies() {
-      pageTitleEl.textContent = `🎬 ${currentYear} Movies I've Watched`;
-      formTitleEl.textContent = `➕ เพิ่มภาพยนตร์ที่ดูแล้ว (ปี ${currentYear})`;
-      releaseYearInput.placeholder = currentYear;
-
-      const movies = allMoviesData[currentYear] || [];
-      movieListEl.innerHTML = '';
-      let sumRating = 0;
-
-      if (movies.length === 0) {
-        movieListEl.innerHTML = `
-          <tr>
-            <td colspan="6" class="empty-state">
-              ยังไม่มีข้อมูลภาพยนตร์ในปี ${currentYear}<br>กดปุ่ม <strong>🔄 ดึงข้อมูลจาก Sheets</strong> ด้านบนเพื่อเชื่อมต่อข้อมูล
-            </td>
-          </tr>
-        `;
-      } else {
-        movies.forEach((movie, index) => {
-          sumRating += Number(movie.rating);
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td>${index + 1}</td>
-            <td><strong>${movie.title}</strong></td>
-            <td>${movie.releaseYear}</td>
-            <td>${movie.dateWatched}</td>
-            <td class="rating-stars">${getStars(movie.rating)}</td>
-            <td>
-              <button class="btn-delete" onclick="deleteMovie(${movie.id})" title="ลบรายการ">✕</button>
-            </td>
-          `;
-          movieListEl.appendChild(tr);
+    function selectYear(yr) {
+        activeYear = yr;
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.innerText === (yr === 'ALL' ? 'ทั้งหมด' : yr));
         });
-      }
-
-      totalCountEl.textContent = movies.length;
-      avgRatingEl.textContent = movies.length > 0 ? (sumRating / movies.length).toFixed(1) : '0.0';
-
-      localStorage.setItem('movies_all_years', JSON.stringify(allMoviesData));
+        applyFilters();
     }
 
-    movieForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-
-      const newMovie = {
-        id: Date.now(),
-        title: document.getElementById('title').value.trim(),
-        releaseYear: Number(document.getElementById('release-year').value),
-        dateWatched: document.getElementById('date-watched').value.trim(),
-        rating: Number(document.getElementById('rating').value)
-      };
-
-      if (!allMoviesData[currentYear]) {
-        allMoviesData[currentYear] = [];
-      }
-
-      allMoviesData[currentYear].push(newMovie);
-      renderMovies();
-
-      movieForm.reset();
-      document.getElementById('rating').value = '3';
-    });
-
-    function deleteMovie(id) {
-      if (confirm('คุณต้องการลบภาพยนตร์เรื่องนี้ใช่หรือไม่?')) {
-        allMoviesData[currentYear] = allMoviesData[currentYear].filter(m => m.id !== id);
-        renderMovies();
-      }
+    function switchView(view) {
+        activeView = view;
+        document.getElementById('btnGridView').classList.toggle('active', view === 'GRID');
+        document.getElementById('btnTableView').classList.toggle('active', view === 'TABLE');
+        
+        document.getElementById('moviesGrid').style.display = view === 'GRID' ? 'grid' : 'none';
+        document.getElementById('tableWrapper').style.display = view === 'TABLE' ? 'block' : 'none';
     }
 
-    renderYearTabs();
-    loadSheetDataForCurrentYear();
-  </script>
+    function updateStats() {
+        let allList = [];
+        const yearCounts = {};
+
+        for (const [yr, list] of Object.entries(allMoviesData)) {
+            if (activeYear === 'ALL' || activeYear === yr) {
+                allList = allList.concat(list);
+            }
+            yearCounts[yr] = list.length;
+        }
+
+        document.getElementById('statTotal').innerText = allList.length;
+
+        if (allList.length > 0) {
+            const avg = (allList.reduce((acc, m) => acc + m.r, 0) / allList.length).toFixed(1);
+            document.getElementById('statAvgRating').innerText = avg;
+
+            const fiveStars = allList.filter(m => m.r === 5).length;
+            document.getElementById('statFiveStar').innerText = fiveStars;
+        } else {
+            document.getElementById('statAvgRating').innerText = '0.0';
+            document.getElementById('statFiveStar').innerText = '0';
+        }
+
+        let maxYr = '-';
+        let maxCount = 0;
+        for (const [yr, count] of Object.entries(yearCounts)) {
+            if (count > maxCount) {
+                maxCount = count;
+                maxYr = `${yr} (${count} เรื่อง)`;
+            }
+        }
+        document.getElementById('statTopYear').innerText = maxYr;
+    }
+
+    function applyFilters() {
+        let movies = [];
+        for (const [yr, list] of Object.entries(allMoviesData)) {
+            if (activeYear === 'ALL' || activeYear === yr) {
+                movies = movies.concat(list);
+            }
+        }
+
+        const search = document.getElementById('searchInput').value.toLowerCase();
+        const rating = document.getElementById('ratingFilter').value;
+        const sort = document.getElementById('sortSelect').value;
+
+        if (search) {
+            movies = movies.filter(m => m.t.toLowerCase().includes(search));
+        }
+
+        if (rating !== 'ALL') {
+            movies = movies.filter(m => m.r === parseInt(rating, 10));
+        }
+
+        // Sorting
+        movies.sort((a, b) => {
+            if (sort === 'RATING_DESC') return b.r - a.r;
+            if (sort === 'RATING_ASC') return a.r - b.r;
+            if (sort === 'TITLE_ASC') return a.t.localeCompare(b.t);
+            if (sort === 'RELEASE_DESC') return (b.y || 0) - (a.y || 0);
+            return 0; // Default DATE_DESC
+        });
+
+        renderMovies(movies);
+    }
+
+    function renderMovies(movies) {
+        const grid = document.getElementById('moviesGrid');
+        const tbody = document.getElementById('movieTableBody');
+        grid.innerHTML = '';
+        tbody.innerHTML = '';
+
+        if (movies.length === 0) {
+            const emptyHTML = '<div class="empty-state"><i class="fa-solid fa-film-slash fa-2x"></i><p style="margin-top:10px;">ไม่พบรายการภาพยนตร์</p></div>';
+            grid.innerHTML = emptyHTML;
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">${emptyHTML}</td></tr>`;
+            return;
+        }
+
+        movies.forEach((m, idx) => {
+            const stars = '⭐'.repeat(m.r);
+            
+            // Grid Card
+            const card = document.createElement('div');
+            card.className = 'movie-card';
+            card.innerHTML = `
+                <div>
+                    <div class="movie-header">
+                        <div class="movie-title">${m.t}</div>
+                        <span class="release-year">${m.y}</span>
+                    </div>
+                </div>
+                <div class="movie-meta">
+                    <span><i class="fa-regular fa-calendar"></i> ${m.d} (${m.yearWatched})</span>
+                    <span class="stars">${stars}</span>
+                </div>
+            `;
+            grid.appendChild(card);
+
+            // Table Row
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${idx + 1}</td>
+                <td style="font-weight:600; color:#fff;">${m.t}</td>
+                <td>${m.y}</td>
+                <td>${m.d} (${m.yearWatched})</td>
+                <td><span class="stars">${stars}</span></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // Initialize
+    window.onload = () => {
+        fetchLiveData();
+    };
+</script>
 </body>
 </html>
