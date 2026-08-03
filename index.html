@@ -5,10 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Movies I've Watched Dashboard</title>
     
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Chart.js สำหรับวาดกราฟ -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
         :root {
@@ -70,220 +76,19 @@
 
         /* ---------------- Header ---------------- */
         header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-bottom: 30px;
-            margin-bottom: 35px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            flex-wrap: wrap;
-            gap: 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            padding-bottom: 30px; margin-bottom: 35px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1); flex-wrap: wrap; gap: 20px;
         }
-
-        .logo-title h1 {
-            font-size: 2.2rem;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
-        }
-
+        .logo-title h1 { font-size: 2.2rem; font-weight: 700; display: flex; align-items: center; gap: 12px; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
         .logo-title h1 i { color: var(--accent-color); }
-
-        .sync-box {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-
+        .sync-box { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
         .btn-action {
-            background: rgba(255, 255, 255, 0.1);
-            color: var(--text-main);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 10px 20px;
-            border-radius: 30px;
-            cursor: pointer;
-            font-weight: 500;
-            display: flex; align-items: center; gap: 8px;
-            transition: all 0.3s;
-            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.1); color: var(--text-main); border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 10px 20px; border-radius: 30px; cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 8px;
+            transition: all 0.3s; backdrop-filter: blur(10px);
         }
-
-        .btn-action:hover {
-            background: var(--text-main);
-            color: #0f172a;
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(255, 255, 255, 0.15);
-        }
-        
-        .btn-danger {
-            background: rgba(239, 68, 68, 0.2);
-            color: #fca5a5;
-            border-color: rgba(239, 68, 68, 0.3);
-        }
-        .btn-danger:hover {
-            background: #ef4444;
-            color: #fff;
-        }
-
-        /* ---------------- Stats Grid ---------------- */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 20px;
-            margin-bottom: 35px;
-        }
-
-        .stat-card {
-            padding: 24px;
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            transition: transform 0.3s;
-        }
-
-        .stat-card:hover { transform: translateY(-5px); }
-
-        .stat-icon {
-            width: 56px; height: 56px;
-            border-radius: 16px;
-            background: rgba(255, 255, 255, 0.1);
-            color: var(--text-main);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.4rem;
-            border: 1px solid rgba(255,255,255,0.05);
-            box-shadow: inset 0 2px 10px rgba(255,255,255,0.1);
-        }
-
-        .stat-info h3 { font-size: 2rem; font-weight: 700; line-height: 1.1; }
-        .stat-info p { font-size: 0.85rem; color: var(--text-muted); margin-top: 4px; }
-
-        /* ---------------- Controls & Filters ---------------- */
-        .controls-panel {
-            padding: 20px 25px;
-            margin-bottom: 35px;
-            display: flex; flex-direction: column; gap: 20px;
-        }
-
-        .year-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px; }
-        .year-tabs::-webkit-scrollbar { display: none; }
-
-        .tab-btn {
-            background: rgba(0, 0, 0, 0.3);
-            color: var(--text-muted);
-            border: 1px solid rgba(255,255,255,0.05);
-            padding: 10px 24px;
-            border-radius: 30px;
-            cursor: pointer;
-            font-weight: 500;
-            white-space: nowrap;
-            transition: all 0.3s;
-        }
-        
-        .tab-btn:hover { color: var(--text-main); background: rgba(255,255,255,0.1); }
-        .tab-btn.active {
-            background: var(--text-main);
-            color: #0f172a;
-            font-weight: 600;
-            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
-        }
-
-        .filter-row { display: flex; gap: 15px; flex-wrap: wrap; align-items: center; justify-content: space-between; }
-        
-        .search-box { position: relative; flex: 1; min-width: 260px; }
-        .search-box input {
-            width: 100%; padding: 12px 15px 12px 42px; border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.1); background-color: rgba(0, 0, 0, 0.4);
-            color: var(--text-main); outline: none; transition: all 0.3s; font-size: 0.95rem;
-        }
-        .search-box input:focus { border-color: var(--accent-color); background-color: rgba(0, 0, 0, 0.6); box-shadow: 0 0 0 3px rgba(96,165,250,0.2); }
-        .search-box i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
-        
-        .filter-group { display: flex; gap: 12px; flex-wrap: wrap; }
-        .filter-group select {
-            padding: 10px 16px; border-radius: 12px; background: rgba(0, 0, 0, 0.4); color: var(--text-main);
-            border: 1px solid rgba(255, 255, 255, 0.1); outline: none; cursor: pointer; font-weight: 500;
-            -webkit-appearance: none; appearance: none;
-        }
-
-        .view-btn-group {
-            display: flex; background: rgba(0, 0, 0, 0.4); border-radius: 12px; padding: 4px; border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .view-btn {
-            background: none; border: none; color: var(--text-muted); padding: 8px 16px; border-radius: 8px;
-            cursor: pointer; transition: all 0.2s; font-size: 1rem;
-        }
-        .view-btn.active { background: rgba(255, 255, 255, 0.2); color: var(--text-main); }
-
-        /* ---------------- Movie Grid (Posters) ---------------- */
-        .movies-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 30px;
-        }
-
-        .fade-in { animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-
-        .movie-card {
-            display: flex; flex-direction: column; position: relative; cursor: pointer;
-        }
-
-        .poster-wrapper {
-            position: relative;
-            width: 100%;
-            aspect-ratio: 2 / 3;
-            background: rgba(0, 0, 0, 0.4);
-            border-radius: 16px;
-            overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
-        }
-
-        .movie-card:hover .poster-wrapper {
-            transform: translateY(-8px) scale(1.02);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(255,255,255,0.1);
-            border-color: rgba(255, 255, 255, 0.3);
-        }
-
-        .poster-placeholder {
-            position: absolute; inset: 0;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            color: var(--text-muted); padding: 20px; text-align: center;
-        }
-
-        .poster-img {
-            width: 100%; height: 100%; object-fit: cover; display: none;
-            transition: transform 0.6s ease;
-        }
-        .movie-card:hover .poster-img { transform: scale(1.08); }
-
-        .rating-badge {
-            position: absolute; top: 12px; right: 12px;
-            background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(8px);
-            color: #fff; padding: 4px 10px; border-radius: 20px;
-            font-weight: 600; font-size: 0.8rem;
-            display: none; align-items: center; gap: 5px;
-            border: 1px solid rgba(255, 255, 255, 0.15); z-index: 10;
-        }
-        .rating-badge i { color: var(--star-color); font-size: 0.75rem; }
-
-        .movie-info { padding: 16px 4px 0 4px; display: flex; flex-direction: column; gap: 6px; }
-
-        .movie-title {
-            font-size: 1.05rem; font-weight: 600; line-height: 1.3;
-            color: var(--text-main);
-            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-        }
-
-        .imdb-link-icon { font-size: 0.7rem; color: var(--accent-color); margin-left: 4px; opacity: 0; transition: 0.3s; }
-        .movie-card:hover .imdb-link-icon { opacity: 1; }
-
-        .movie-meta { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: var(--text-muted); }
+        .btn-action:hover { background: var(--text-main); color: #0f172a; transform: translateY(-2px); box-shadow: 0 10px 20px rgba(255, 255, 255, 0.15); }
 
         /* ---------------- Add Form ---------------- */
         .add-form-panel { padding: 30px; margin-bottom: 35px; display: none; }
@@ -298,16 +103,111 @@
             background: rgba(0,0,0,0.4); color: #fff; outline: none;
         }
 
+        /* ---------------- Stats Grid ---------------- */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 35px; }
+        .stat-card { padding: 24px; display: flex; align-items: center; gap: 20px; transition: transform 0.3s; }
+        .stat-card:hover { transform: translateY(-5px); }
+        .stat-icon {
+            width: 56px; height: 56px; border-radius: 16px; background: rgba(255, 255, 255, 0.1);
+            color: var(--text-main); display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem; border: 1px solid rgba(255,255,255,0.05); box-shadow: inset 0 2px 10px rgba(255,255,255,0.1);
+        }
+        .stat-info h3 { font-size: 2rem; font-weight: 700; line-height: 1.1; }
+        .stat-info p { font-size: 0.85rem; color: var(--text-muted); margin-top: 4px; }
+
+        /* ---------------- Charts Section ---------------- */
+        .charts-container {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 20px;
+            margin-bottom: 35px;
+        }
+        .chart-box {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            min-height: 300px;
+        }
+        .chart-box.full-width {
+            grid-column: 1 / -1;
+        }
+        .chart-header {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .chart-header i { color: var(--accent-color); }
+        .canvas-wrapper {
+            position: relative;
+            flex: 1;
+            width: 100%;
+            height: 100%;
+        }
+        @media (max-width: 900px) {
+            .charts-container { grid-template-columns: 1fr; }
+        }
+
+        /* ---------------- Controls & Filters ---------------- */
+        .controls-panel { padding: 20px 25px; margin-bottom: 35px; display: flex; flex-direction: column; gap: 20px; }
+        .year-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px; }
+        .year-tabs::-webkit-scrollbar { display: none; }
+        .tab-btn {
+            background: rgba(0, 0, 0, 0.3); color: var(--text-muted); border: 1px solid rgba(255,255,255,0.05);
+            padding: 10px 24px; border-radius: 30px; cursor: pointer; font-weight: 500; white-space: nowrap; transition: all 0.3s;
+        }
+        .tab-btn:hover { color: var(--text-main); background: rgba(255,255,255,0.1); }
+        .tab-btn.active { background: var(--text-main); color: #0f172a; font-weight: 600; box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2); }
+
+        .filter-row { display: flex; gap: 15px; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+        .search-box { position: relative; flex: 1; min-width: 260px; }
+        .search-box input {
+            width: 100%; padding: 12px 15px 12px 42px; border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1); background-color: rgba(0, 0, 0, 0.4);
+            color: var(--text-main); outline: none; transition: all 0.3s; font-size: 0.95rem;
+        }
+        .search-box input:focus { border-color: var(--accent-color); background-color: rgba(0, 0, 0, 0.6); }
+        .search-box i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
+        
+        .filter-group { display: flex; gap: 12px; flex-wrap: wrap; }
+        .filter-group select {
+            padding: 10px 16px; border-radius: 12px; background: rgba(0, 0, 0, 0.4); color: var(--text-main);
+            border: 1px solid rgba(255, 255, 255, 0.1); outline: none; cursor: pointer; font-weight: 500;
+        }
+
+        .view-btn-group { display: flex; background: rgba(0, 0, 0, 0.4); border-radius: 12px; padding: 4px; border: 1px solid rgba(255, 255, 255, 0.1); }
+        .view-btn { background: none; border: none; color: var(--text-muted); padding: 8px 16px; border-radius: 8px; cursor: pointer; transition: all 0.2s; font-size: 1rem; }
+        .view-btn.active { background: rgba(255, 255, 255, 0.2); color: var(--text-main); }
+
+        /* ---------------- Movie Grid ---------------- */
+        .movies-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; }
+        .fade-in { animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .movie-card {
+            background: var(--glass-bg); backdrop-filter: blur(10px); border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.05); padding: 20px; display: flex; flex-direction: column; justify-content: space-between;
+            transition: all 0.3s;
+        }
+        .movie-card:hover { transform: translateY(-5px); border-color: rgba(96,165,250,0.3); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .movie-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+        .movie-title { font-size: 1.1rem; font-weight: 600; line-height: 1.4; color: #fff; }
+        .release-year { font-size: 0.75rem; background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 20px; color: #cbd5e1; margin-left: 8px; white-space: nowrap; }
+        .movie-meta { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.05); font-size: 0.85rem; color: var(--text-muted); }
+
         /* ---------------- Table View ---------------- */
         .table-wrapper { width: 100%; overflow-x: auto; display: none; padding: 10px; }
         table { width: 100%; border-collapse: collapse; text-align: left; }
         th, td { padding: 18px 20px; border-bottom: 1px solid rgba(255,255,255,0.05); }
         th { color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        tr { transition: background 0.2s; cursor: pointer; }
+        tr { transition: background 0.2s; }
         tr:hover { background: rgba(255, 255, 255, 0.05); }
         td.table-title { font-weight: 500; color: #fff; font-size: 1rem; }
-        .table-imdb-link { display: none; margin-left: 8px; color: var(--text-muted); font-size: 0.8rem; }
-        tr:hover .table-imdb-link { display: inline-block; color: var(--text-main); }
+
+        .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); grid-column: 1 / -1; }
     </style>
 </head>
 <body>
@@ -322,11 +222,8 @@
             <button class="btn-action" style="background: rgba(16, 185, 129, 0.2); color: #34d399; border-color: rgba(16, 185, 129, 0.3);" onclick="toggleAddForm()">
                 <i class="fa-solid fa-plus"></i> เพิ่มหนัง
             </button>
-            <button class="btn-action btn-danger" onclick="clearImageCache()">
-                <i class="fa-solid fa-broom"></i> ล้างแคชรูปภาพ
-            </button>
             <button class="btn-action" onclick="fetchLiveData()">
-                <i class="fa-solid fa-cloud-arrow-down"></i> ดึงข้อมูลชีต
+                <i class="fa-solid fa-cloud-arrow-down"></i> ซิงค์ข้อมูลชีต
             </button>
         </div>
     </header>
@@ -354,6 +251,7 @@
         </form>
     </div>
 
+    <!-- Stats Cards -->
     <div class="stats-grid">
         <div class="stat-card glass-panel">
             <div class="stat-icon"><i class="fa-solid fa-ticket"></i></div>
@@ -366,6 +264,33 @@
         <div class="stat-card glass-panel">
             <div class="stat-icon"><i class="fa-solid fa-fire-flame-curved"></i></div>
             <div class="stat-info"><h3 id="statTopYear">-</h3><p>ปีที่ดูเยอะที่สุด</p></div>
+        </div>
+    </div>
+
+    <!-- Advanced Charts Section -->
+    <div class="charts-container">
+        <!-- Chart 1: Bar Chart (Monthly) -->
+        <div class="chart-box glass-panel">
+            <div class="chart-header"><i class="fa-solid fa-chart-column"></i> สถิติการดูภาพยนตร์รายเดือน</div>
+            <div class="canvas-wrapper">
+                <canvas id="monthlyChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- Chart 2: Doughnut Chart (Ratings) -->
+        <div class="chart-box glass-panel">
+            <div class="chart-header"><i class="fa-solid fa-chart-pie"></i> สัดส่วนการให้คะแนน</div>
+            <div class="canvas-wrapper">
+                <canvas id="ratingChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Chart 3: Horizontal Bar Chart (Decades) -->
+        <div class="chart-box glass-panel full-width">
+            <div class="chart-header"><i class="fa-solid fa-timeline"></i> ยุคของภาพยนตร์ที่ดู (Decade Tracker)</div>
+            <div class="canvas-wrapper" style="height: 250px;">
+                <canvas id="decadeChart"></canvas>
+            </div>
         </div>
     </div>
 
@@ -387,7 +312,7 @@
             </div>
             <div class="filter-group">
                 <select id="sortSelect" onchange="applyFilters()">
-                    <option value="DATE_DESC">ดูล่าสุด</option>
+                    <option value="DATE_DESC">เรียงลำดับในไฟล์</option>
                     <option value="TITLE_ASC">ชื่อเรื่อง (A-Z)</option>
                     <option value="RELEASE_DESC">ปีที่ฉาย (ใหม่สุด)</option>
                 </select>
@@ -412,10 +337,6 @@
 </div>
 
 <script>
-    // 🔑 API Keys
-    const TMDB_API = '7b0e42848add2ef42a3614c6a40b801b';
-    const OMDB_API = '941b28f2';
-
     const SHEET_IDS = {
         '2026': '1ZdV8YXXQAqXegMwJl3PpqHItTI6GXyx8RU2ZQmhF7Tg', 
         '2025': '1dNxvYfZUN-XBryNf_QB9DnaBM5Fc8TRg4k9Niv1y1hA',
@@ -428,90 +349,17 @@
     let allMoviesData = {};
     let activeYear = 'ALL';
     let activeView = 'GRID';
-    let observer = null;
+    
+    // ตัวแปรกราฟ
+    let chartMonthly = null;
+    let chartRating = null;
+    let chartDecade = null;
 
-    function clearImageCache() {
-        // ลบเฉพาะข้อมูลที่ขึ้นต้นด้วย meta_ ออกจาก localStorage
-        const keysToRemove = [];
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key && key.startsWith('meta_')) {
-                keysToRemove.push(key);
-            }
-        }
-        keysToRemove.forEach(k => localStorage.removeItem(k));
-        alert('เคลียร์แคชรูปภาพเรียบร้อยแล้ว! ข้อมูลจะถูกโหลดใหม่');
-        applyFilters(); // บังคับให้เริ่มโหลดรูปใหม่
-    }
-
-    function cleanMovieTitle(title) {
-        return title.replace(/\s*\(.*?\)\s*/g, '').trim(); 
-    }
-
-    function openIMDB(imdbID, title) {
-        if (imdbID && imdbID !== 'N/A') {
-            window.open(`https://www.imdb.com/title/${imdbID}/`, '_blank');
-        } else {
-            const searchTitle = cleanMovieTitle(title);
-            window.open(`https://www.imdb.com/find?q=${encodeURIComponent(searchTitle)}`, '_blank');
-        }
-    }
-
-    // --- API Fetching: ดึงรูปจาก TMDB ก่อน เพราะไม่ค่อยติด Limit ---
-    async function fetchPosterAndRating(rawTitle, year) {
-        const title = cleanMovieTitle(rawTitle); 
-        const cacheKey = `meta_v5_${title.toLowerCase()}_${year}`; // เปลี่ยนคีย์ใหม่เพื่อรีเฟรชแคช
-        
-        // ถ้าเคยดึงสำเร็จแล้วให้เอาในแคชมาโชว์เลย
-        const cached = localStorage.getItem(cacheKey);
-        if (cached) {
-            const parsed = JSON.parse(cached);
-            // โหลดใหม่เฉพาะถ้าครั้งก่อนมันได้ค่าว่างมา
-            if (parsed.poster || parsed.rating) return parsed;
-        }
-
-        let meta = { poster: null, rating: null, source: null, imdbID: null };
-
-        try {
-            // 1. ดึงจาก TMDB ก่อน (โควต้าเยอะกว่า OMDb มาก)
-            let tmdbUrl = `https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API}&query=${encodeURIComponent(title)}`;
-            let res = await fetch(tmdbUrl);
-            let data = await res.json();
-            
-            if (data.results && data.results.length > 0) {
-                let match = data.results[0];
-                if (year && year !== '-' && !isNaN(parseInt(year))) {
-                    const exactMatch = data.results.find(m => m.release_date && m.release_date.startsWith(year));
-                    if (exactMatch) match = exactMatch;
-                }
-                if (match.poster_path) meta.poster = `https://image.tmdb.org/t/p/w500${match.poster_path}`;
-                if (match.vote_average > 0) { meta.rating = match.vote_average.toFixed(1); meta.source = 'TMDB'; }
-            }
-
-            // 2. ถ้า TMDB ไม่มี ให้หาจาก OMDb เสริม
-            if (!meta.poster || !meta.rating) {
-                let omdbUrl = `https://www.omdbapi.com/?t=${encodeURIComponent(title)}&apikey=${OMDB_API}`;
-                let omdbRes = await fetch(omdbUrl);
-                let omdbData = await omdbRes.json();
-                
-                if (omdbData.Response === "True") {
-                    if (!meta.poster && omdbData.Poster && omdbData.Poster !== "N/A") meta.poster = omdbData.Poster;
-                    if (!meta.rating && omdbData.imdbRating && omdbData.imdbRating !== "N/A") { 
-                        meta.rating = omdbData.imdbRating; 
-                        meta.source = 'IMDb'; 
-                    }
-                    meta.imdbID = omdbData.imdbID;
-                }
-            }
-        } catch (e) { console.error("API Fetch Error:", e); }
-
-        // เซฟลงแคชเฉพาะตอนที่ได้ภาพหรือคะแนนมาแล้ว เพื่อป้องกันการจำค่าที่ผิดพลาด
-        if (meta.poster || meta.rating) {
-            localStorage.setItem(cacheKey, JSON.stringify(meta));
-        }
-        
-        return meta;
-    }
+    // ตั้งค่าพื้นฐานให้ Chart.js เข้ากับธีม Dark
+    Chart.defaults.color = '#94a3b8';
+    Chart.defaults.font.family = "'Poppins', 'Noto Sans Thai', sans-serif";
+    Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(15, 23, 42, 0.9)';
+    Chart.defaults.plugins.tooltip.padding = 12;
 
     function toggleAddForm() { document.getElementById('addFormPanel').classList.toggle('show'); }
 
@@ -538,7 +386,7 @@
 
     function extractMoviesFromCSV(csvRows, year) {
         let headerIdx = -1;
-        let colMap = { title: 2, releaseYear: 3, dateWatched: 4 };
+        let colMap = { title: 2, releaseYear: 3, dateWatched: 4, rating: 5 };
 
         for (let i = 0; i < Math.min(csvRows.length, 6); i++) {
             const row = csvRows[i];
@@ -548,6 +396,7 @@
                 if (cell.includes('name') || cell.includes('ชื่อเรื่อง') || cell.includes('title')) { headerIdx = i; colMap.title = j; }
                 if (cell.includes('release') || (cell.includes('ปี') && !cell.includes('ดู'))) { colMap.releaseYear = j; }
                 if (cell.includes('date') || cell.includes('วันที่') || cell.includes('ดู')) { colMap.dateWatched = j; }
+                if (cell.includes('rating') || cell.includes('คะแนน') || cell.includes('⭐')) { colMap.rating = j; }
             }
             if (headerIdx !== -1) break;
         }
@@ -557,15 +406,30 @@
 
         for (let i = startRow; i < csvRows.length; i++) {
             const row = csvRows[i];
-            if (!row || row.length <= Math.max(...Object.values(colMap))) continue;
+            if (!row || row.length <= Math.max(colMap.title, colMap.releaseYear, colMap.dateWatched)) continue;
             
             const title = row[colMap.title] ? row[colMap.title].replace(/^"|"$/g, '').trim() : '';
             if (!title || title.toLowerCase() === 'name' || title === 'หนังที่ฉันดู' || title === 'ชื่อเรื่อง') continue;
 
             const relYear = row[colMap.releaseYear] ? row[colMap.releaseYear].replace(/^"|"$/g, '').trim() : year;
             const dateWatched = row[colMap.dateWatched] ? row[colMap.dateWatched].replace(/^"|"$/g, '').trim() : '-';
+            const rawRating = row[colMap.rating] ? row[colMap.rating].replace(/^"|"$/g, '').trim() : '';
 
-            movies.push({ t: title, y: relYear || year, d: dateWatched, yearWatched: year, isCustom: false });
+            // ดึงเฉพาะดาวเพื่อใช้ทำกราฟสัดส่วนคะแนน
+            let ratingNum = 0;
+            if (rawRating) {
+                const stars = rawRating.match(/[⭐★☆✰]/g);
+                if (stars) {
+                    let count = 0;
+                    for (let c of rawRating.replace(/["']/g, '')) {
+                        if (c === '⭐' || c === '★' || c === '⭐️') count++;
+                        else break;
+                    }
+                    ratingNum = count <= 5 ? count : 0;
+                }
+            }
+
+            movies.push({ t: title, y: relYear || year, d: dateWatched, r: ratingNum, yearWatched: year, isCustom: false });
         }
         return movies;
     }
@@ -609,7 +473,7 @@
         const dateWatched = document.getElementById('inputDateWatched').value.trim();
         const targetYear = document.getElementById('inputTargetYear').value;
 
-        const newMovie = { t: title, y: releaseYear, d: dateWatched, yearWatched: targetYear, isCustom: true };
+        const newMovie = { t: title, y: releaseYear, d: dateWatched, r: 0, yearWatched: targetYear, isCustom: true };
         if (!allMoviesData[targetYear]) allMoviesData[targetYear] = [];
         allMoviesData[targetYear].unshift(newMovie);
 
@@ -621,8 +485,6 @@
         document.getElementById('addMovieForm').reset();
         toggleAddForm();
         selectYear(targetYear);
-        updateStats();
-        applyFilters();
     }
 
     function selectYear(yr) {
@@ -630,6 +492,7 @@
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.classList.toggle('active', btn.innerText === (yr === 'ALL' ? 'ทั้งหมด' : yr));
         });
+        updateStats();
         applyFilters();
     }
 
@@ -659,11 +522,144 @@
         document.getElementById('statTopYear').innerText = maxYr;
     }
 
+    // ---------------- วาดกราฟสถิติ (Chart.js) ----------------
+    function drawCharts(movies) {
+        // เตรียมข้อมูลเดือน
+        const monthsMap = {'jan':0, 'ม.ค.':0, 'feb':1, 'ก.พ.':1, 'mar':2, 'มี.ค.':2, 'apr':3, 'เม.ย.':3, 'may':4, 'พ.ค.':4, 'jun':5, 'มิ.ย.':5, 'jul':6, 'ก.ค.':6, 'aug':7, 'ส.ค.':7, 'sep':8, 'ก.ย.':8, 'oct':9, 'ต.ค.':9, 'nov':10, 'พ.ย.':10, 'dec':11, 'ธ.ค.':11};
+        const monthCounts = new Array(12).fill(0);
+        
+        // เตรียมข้อมูลดาว
+        const ratingCounts = {5:0, 4:0, 3:0, 2:0, 1:0, unrated:0};
+
+        // เตรียมข้อมูลยุค (Decade)
+        const decadeCounts = {};
+
+        movies.forEach(m => {
+            // นับเดือน
+            if(m.d && m.d !== '-') {
+                const monthStr = m.d.substring(0,3).toLowerCase();
+                if(monthsMap[monthStr] !== undefined) {
+                    monthCounts[monthsMap[monthStr]]++;
+                }
+            }
+            
+            // นับดาว
+            if (m.r >= 1 && m.r <= 5) ratingCounts[m.r]++;
+            else ratingCounts.unrated++;
+
+            // นับยุค
+            const yearNum = parseInt(m.y);
+            if (!isNaN(yearNum) && yearNum > 1900 && yearNum < 2100) {
+                const decade = Math.floor(yearNum / 10) * 10;
+                decadeCounts[decade] = (decadeCounts[decade] || 0) + 1;
+            }
+        });
+
+        // 1. วาดกราฟแท่งรายเดือน
+        if(chartMonthly) chartMonthly.destroy();
+        const ctxMonthly = document.getElementById('monthlyChart').getContext('2d');
+        const gradientBlue = ctxMonthly.createLinearGradient(0, 0, 0, 400);
+        gradientBlue.addColorStop(0, 'rgba(96, 165, 250, 0.8)');
+        gradientBlue.addColorStop(1, 'rgba(59, 130, 246, 0.2)');
+
+        chartMonthly = new Chart(ctxMonthly, {
+            type: 'bar',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                datasets: [{
+                    label: 'จำนวนเรื่อง',
+                    data: monthCounts,
+                    backgroundColor: gradientBlue,
+                    borderRadius: 6,
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { stepSize: 1 } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+
+        // 2. วาดกราฟโดนัท เรตติ้ง
+        if(chartRating) chartRating.destroy();
+        const ctxRating = document.getElementById('ratingChart').getContext('2d');
+        chartRating = new Chart(ctxRating, {
+            type: 'doughnut',
+            data: {
+                labels: ['5 ดาว', '4 ดาว', '3 ดาว', '2 ดาว', '1 ดาว', 'ไม่ได้ให้คะแนน'],
+                datasets: [{
+                    data: [ratingCounts[5], ratingCounts[4], ratingCounts[3], ratingCounts[2], ratingCounts[1], ratingCounts.unrated],
+                    backgroundColor: [
+                        '#fbbf24', // 5 Star
+                        '#94a3b8', // 4 Star
+                        '#d97706', // 3 Star
+                        '#ef4444', // 2 Star
+                        '#7f1d1d', // 1 Star
+                        'rgba(255,255,255,0.1)' // Unrated
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#0f172a'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '70%',
+                plugins: {
+                    legend: { position: 'right', labels: { boxWidth: 12, usePointStyle: true } }
+                }
+            }
+        });
+
+        // 3. วาดกราฟแท่งแนวนอน ยุคของหนัง
+        if(chartDecade) chartDecade.destroy();
+        const ctxDecade = document.getElementById('decadeChart').getContext('2d');
+        
+        const sortedDecades = Object.keys(decadeCounts).sort();
+        const decadeLabels = sortedDecades.map(d => `${d}s`);
+        const decadeData = sortedDecades.map(d => decadeCounts[d]);
+
+        const gradientGreen = ctxDecade.createLinearGradient(0, 0, 800, 0);
+        gradientGreen.addColorStop(0, 'rgba(52, 211, 153, 0.8)');
+        gradientGreen.addColorStop(1, 'rgba(16, 185, 129, 0.2)');
+
+        chartDecade = new Chart(ctxDecade, {
+            type: 'bar',
+            data: {
+                labels: decadeLabels.length > 0 ? decadeLabels : ['No Data'],
+                datasets: [{
+                    label: 'จำนวนเรื่อง',
+                    data: decadeData.length > 0 ? decadeData : [0],
+                    backgroundColor: gradientGreen,
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { stepSize: 1 } },
+                    y: { grid: { display: false } }
+                }
+            }
+        });
+    }
+
     function applyFilters() {
         let movies = [];
         for (const [yr, list] of Object.entries(allMoviesData)) {
             if (activeYear === 'ALL' || activeYear === yr) movies = movies.concat(list);
         }
+
+        // วาดกราฟใหม่จากข้อมูลที่ Filter แล้ว
+        drawCharts(movies);
 
         const search = document.getElementById('searchInput').value.toLowerCase();
         const sort = document.getElementById('sortSelect').value;
@@ -673,7 +669,7 @@
         movies.sort((a, b) => {
             if (sort === 'TITLE_ASC') return a.t.localeCompare(b.t);
             if (sort === 'RELEASE_DESC') return (b.y || 0) - (a.y || 0);
-            return 0; // Default DATE_DESC
+            return 0; // Default
         });
 
         renderMovies(movies);
@@ -689,45 +685,6 @@
             return;
         }
 
-        // Setup Lazy Loading
-        if(observer) observer.disconnect();
-        observer = new IntersectionObserver((entries, obs) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    const card = entry.target;
-                    const title = card.dataset.title;
-                    const year = card.dataset.year;
-                    
-                    fetchPosterAndRating(title, year).then(meta => {
-                        card.onclick = () => openIMDB(meta.imdbID, title);
-
-                        if (meta.poster && meta.poster !== "N/A") {
-                            const img = card.querySelector('.poster-img');
-                            img.src = meta.poster;
-                            img.onload = () => {
-                                img.style.display = 'block';
-                                card.querySelector('.poster-placeholder').style.display = 'none';
-                            };
-                            img.onerror = () => {
-                                img.style.display = 'none';
-                                card.querySelector('.poster-placeholder').style.display = 'flex';
-                            };
-                        }
-                        if (meta.rating && meta.rating !== "N/A") {
-                            const badge = card.querySelector('.rating-badge');
-                            badge.querySelector('.rating-val').innerText = meta.rating;
-                            badge.style.display = 'flex';
-                            if (meta.source === 'IMDb') {
-                                badge.style.color = '#fff';
-                                badge.querySelector('i').className = 'fa-brands fa-imdb';
-                            }
-                        }
-                    });
-                    obs.unobserve(card);
-                }
-            });
-        }, { rootMargin: '200px' });
-
         movies.forEach((m, idx) => {
             const customTag = m.isCustom ? `<span style="font-size:0.6rem; background:rgba(255,255,255,0.2); padding:2px 6px; border-radius:4px; margin-left:4px;">เพิ่มเอง</span>` : '';
             
@@ -735,35 +692,26 @@
             const card = document.createElement('div');
             card.className = 'movie-card fade-in';
             card.style.animationDelay = `${Math.min(idx * 0.02, 0.5)}s`;
-            card.dataset.title = m.t;
-            card.dataset.year = m.y;
             card.innerHTML = `
-                <div class="poster-wrapper">
-                    <div class="poster-placeholder">
-                        <i class="fa-solid fa-film fa-2x" style="opacity:0.3; margin-bottom:10px;"></i>
-                        <span style="font-size: 0.75rem; opacity: 0.7; padding: 0 10px;">${m.t}</span>
+                <div>
+                    <div class="movie-header">
+                        <div class="movie-title">${m.t} ${customTag}</div>
+                        <span class="release-year">${m.y}</span>
                     </div>
-                    <img class="poster-img" alt="${m.t}" loading="lazy">
-                    <div class="rating-badge"><i class="fa-solid fa-star"></i> <span class="rating-val"></span></div>
                 </div>
-                <div class="movie-info">
-                    <h3 class="movie-title">${m.t} <i class="fa-solid fa-arrow-up-right-from-square imdb-link-icon"></i></h3>
-                    <div class="movie-meta">
-                        <span class="release-year">${m.y} ${customTag}</span>
-                    </div>
+                <div class="movie-meta">
+                    <span><i class="fa-regular fa-calendar-check" style="color:var(--accent-color); margin-right:5px;"></i>${m.d} (${m.yearWatched})</span>
                 </div>
             `;
             grid.appendChild(card);
-            observer.observe(card);
 
             // Table Row
             const tr = document.createElement('tr');
             tr.className = 'fade-in';
             tr.style.animationDelay = `${Math.min(idx * 0.01, 0.3)}s`;
-            tr.onclick = () => { fetchPosterAndRating(m.t, m.y).then(meta => openIMDB(meta.imdbID, m.t)); };
             tr.innerHTML = `
                 <td style="color: var(--text-muted);">${idx + 1}</td>
-                <td class="table-title">${m.t} <i class="fa-solid fa-arrow-up-right-from-square table-imdb-link"></i> ${customTag}</td>
+                <td class="table-title">${m.t} ${customTag}</td>
                 <td>${m.y}</td>
                 <td style="color: var(--text-muted);">${m.d}</td>
             `;
