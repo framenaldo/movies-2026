@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>2026 Movies I've Watched</title>
+  <title>Movies I've Watched</title>
   <style>
     :root {
       --bg-color: #0f172a;
@@ -36,7 +36,7 @@
     }
 
     header {
-      margin-bottom: 2rem;
+      margin-bottom: 1.5rem;
       text-align: center;
     }
 
@@ -50,6 +50,58 @@
       color: var(--text-muted);
     }
 
+    /* แท็บเมนูเลือกปี */
+    .year-nav {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .year-btn {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      padding: 0.52rem 1.25rem;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .year-btn:hover {
+      border-color: var(--accent-color);
+      color: var(--text-main);
+    }
+
+    .year-btn.active {
+      background: var(--accent-color);
+      border-color: var(--accent-color);
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.35);
+    }
+
+    .btn-sync {
+      background: rgba(99, 102, 241, 0.15);
+      border: 1px solid var(--accent-color);
+      color: #a5b4fc;
+      padding: 0.52rem 1rem;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .btn-sync:hover {
+      background: var(--accent-color);
+      color: #ffffff;
+    }
+
+    /* กล่องสถิติ */
     .stats-bar {
       display: flex;
       gap: 1rem;
@@ -76,7 +128,7 @@
       color: var(--text-muted);
     }
 
-    /* Form Section */
+    /* ฟอร์มกรอกข้อมูล */
     .form-container {
       background: var(--card-bg);
       padding: 1.5rem;
@@ -143,7 +195,7 @@
       background: var(--accent-hover);
     }
 
-    /* Table Section */
+    /* ตารางแสดงรายการ */
     .table-container {
       background: var(--card-bg);
       border-radius: 12px;
@@ -196,16 +248,37 @@
     .btn-delete:hover {
       background: rgba(239, 68, 68, 0.1);
     }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text-muted);
+    }
+
+    .status-badge {
+      font-size: 0.8rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 12px;
+      margin-left: 0.5rem;
+      vertical-align: middle;
+      background: rgba(34, 197, 94, 0.2);
+      color: #4ade80;
+      border: 1px solid rgba(34, 197, 94, 0.4);
+    }
   </style>
 </head>
 <body>
 
   <div class="container">
     <header>
-      <h1>🎬 2026 Movies I've Watched</h1>
-      <p>รายการบันทึกภาพยนตร์ที่รับชมแล้ว</p>
+      <h1 id="page-title">🎬 Movies I've Watched</h1>
+      <p>รายการบันทึกภาพยนตร์ที่รับชมแล้ว <span id="sync-status" class="status-badge">Live Sync</span></p>
     </header>
 
+    <!-- แท็บเลือกปี -->
+    <div class="year-nav" id="year-nav"></div>
+
+    <!-- สถิติ -->
     <div class="stats-bar">
       <div class="stat-card">
         <div class="value" id="total-count">0</div>
@@ -217,9 +290,9 @@
       </div>
     </div>
 
-    <!-- Form Add Data -->
+    <!-- ฟอร์มกรอกข้อมูล -->
     <div class="form-container">
-      <h2>➕ เพิ่มภาพยนตร์ที่ดูแล้ว</h2>
+      <h2 id="form-title">➕ เพิ่มภาพยนตร์ที่ดูแล้ว</h2>
       <form id="movie-form" class="form-grid">
         <div class="form-group">
           <label for="title">ชื่อภาพยนตร์</label>
@@ -247,7 +320,7 @@
       </form>
     </div>
 
-    <!-- Movie Table -->
+    <!-- ตารางแสดงรายการ -->
     <div class="table-container">
       <table>
         <thead>
@@ -260,84 +333,190 @@
             <th style="width: 50px;"></th>
           </tr>
         </thead>
-        <tbody id="movie-list">
-          <!-- Dynamically Generated -->
-        </tbody>
+        <tbody id="movie-list"></tbody>
       </table>
     </div>
   </div>
 
   <script>
-    // ข้อมูลเริ่มต้น 23 เรื่องจากไฟล์ Google Sheet
-    const initialMovies = [
-      { id: 1, title: "Jurassic World: Rebirth", releaseYear: 2025, dateWatched: "Jan 18", rating: 2 },
-      { id: 2, title: "One Battle After Another", releaseYear: 2025, dateWatched: "Jan 18", rating: 3 },
-      { id: 3, title: "It Was Just an Accident", releaseYear: 2025, dateWatched: "Jan 23", rating: 3 },
-      { id: 4, title: "Train Dreams", releaseYear: 2025, dateWatched: "Feb 3", rating: 4 },
-      { id: 5, title: "The Secret Agent", releaseYear: 2025, dateWatched: "Feb 5", rating: 3 },
-      { id: 6, title: "28 Years Later", releaseYear: 2025, dateWatched: "Feb 9", rating: 2 },
-      { id: 7, title: "Sentimental Value", releaseYear: 2025, dateWatched: "Feb 14", rating: 3 },
-      { id: 8, title: "Hamnet", releaseYear: 2025, dateWatched: "Feb 19", rating: 4 },
-      { id: 9, title: "Bugonia", releaseYear: 2025, dateWatched: "Mar 3", rating: 4 },
-      { id: 10, title: "The Voice of Hind Rajab", releaseYear: 2025, dateWatched: "Mar 5", rating: 4 },
-      { id: 11, title: "Marty Supreme", releaseYear: 2025, dateWatched: "Mar 12", rating: 4 },
-      { id: 12, title: "Zootopia 2", releaseYear: 2025, dateWatched: "Mar 15", rating: 3 },
-      { id: 13, title: "Hoppers", releaseYear: 2026, dateWatched: "Mar 15", rating: 3 },
-      { id: 14, title: "Project Hail Mary", releaseYear: 2026, dateWatched: "Mar 21", rating: 3 },
-      { id: 15, title: "The Super Mario Galaxy Movie", releaseYear: 2026, dateWatched: "Apr 5", rating: 3 },
-      { id: 16, title: "Michael", releaseYear: 2026, dateWatched: "Apr 25", rating: 3 },
-      { id: 17, title: "28 Years Later: The Bone Temple", releaseYear: 2026, dateWatched: "Apr 27", rating: 3 },
-      { id: 18, title: "Star Wars: The Mandalorian and Grogu", releaseYear: 2026, dateWatched: "May 21", rating: 3 },
-      { id: 19, title: "On the Waterfront", releaseYear: 1954, dateWatched: "May 24", rating: 4 },
-      { id: 20, title: "Power Ballad", releaseYear: 2026, dateWatched: "Jun 13", rating: 3 },
-      { id: 21, title: "Supergirl", releaseYear: 2026, dateWatched: "Jun 24", rating: 2 },
-      { id: 22, title: "The Odyssey", releaseYear: 2026, dateWatched: "Jul 16", rating: 5 },
-      { id: 23, title: "Spider-Man: Brand New Day", releaseYear: 2026, dateWatched: "Jul 30", rating: 3 }
-    ];
+    // 🔗 การจับคู่ปี กับ Sheet ID ของ Google Sheets ทั้ง 5 ลิงก์ที่คุณส่งมา
+    // (คุณสามารถแก้ไขตัวเลขปี "2025", "2024", ... ให้ตรงกับลำดับไฟล์จริงได้เลยครับ)
+    const sheetMap = {
+      "2026": "LOCAL", // ข้อมูลปี 2026 ฝังในระบบ
+      "2025": "1dNxvYfZUN-XBryNf_QB9DnaBM5Fc8TRg4k9Niv1y1hA",
+      "2024": "10uRvpV3fI4tcGmCoTS4cSpCd32wGIEIuR6RpFRh3h68",
+      "2023": "1TjOzc2WY9VOu-PujXk7QJj-G57Y1hcvPof7i6imsHy0",
+      "2022": "1CTjHtjL3D0P5wn8vq8VX10gvy3xGaLog_Kv-z7kC9Bw",
+      "2021": "1OZBdY4QRWriPuybGGxD4Wk2LomVcuuYCYICaK_b7oKo"
+    };
 
-    // โหลดข้อมูลจาก LocalStorage หรือใช้ข้อมูลเริ่มต้น
-    let movies = JSON.parse(localStorage.getItem('movies_2026')) || initialMovies;
+    const initialDataByYear = {
+      "2026": [
+        { id: 1, title: "Jurassic World: Rebirth", releaseYear: 2025, dateWatched: "Jan 18", rating: 2 },
+        { id: 2, title: "One Battle After Another", releaseYear: 2025, dateWatched: "Jan 18", rating: 3 },
+        { id: 3, title: "It Was Just an Accident", releaseYear: 2025, dateWatched: "Jan 23", rating: 3 },
+        { id: 4, title: "Train Dreams", releaseYear: 2025, dateWatched: "Feb 3", rating: 4 },
+        { id: 5, title: "The Secret Agent", releaseYear: 2025, dateWatched: "Feb 5", rating: 3 },
+        { id: 6, title: "28 Years Later", releaseYear: 2025, dateWatched: "Feb 9", rating: 2 },
+        { id: 7, title: "Sentimental Value", releaseYear: 2025, dateWatched: "Feb 14", rating: 3 },
+        { id: 8, title: "Hamnet", releaseYear: 2025, dateWatched: "Feb 19", rating: 4 },
+        { id: 9, title: "Bugonia", releaseYear: 2025, dateWatched: "Mar 3", rating: 4 },
+        { id: 10, title: "The Voice of Hind Rajab", releaseYear: 2025, dateWatched: "Mar 5", rating: 4 },
+        { id: 11, title: "Marty Supreme", releaseYear: 2025, dateWatched: "Mar 12", rating: 4 },
+        { id: 12, title: "Zootopia 2", releaseYear: 2025, dateWatched: "Mar 15", rating: 3 },
+        { id: 13, title: "Hoppers", releaseYear: 2026, dateWatched: "Mar 15", rating: 3 },
+        { id: 14, title: "Project Hail Mary", releaseYear: 2026, dateWatched: "Mar 21", rating: 3 },
+        { id: 15, title: "The Super Mario Galaxy Movie", releaseYear: 2026, dateWatched: "Apr 5", rating: 3 },
+        { id: 16, title: "Michael", releaseYear: 2026, dateWatched: "Apr 25", rating: 3 },
+        { id: 17, title: "28 Years Later: The Bone Temple", releaseYear: 2026, dateWatched: "Apr 27", rating: 3 },
+        { id: 18, title: "Star Wars: The Mandalorian and Grogu", releaseYear: 2026, dateWatched: "May 21", rating: 3 },
+        { id: 19, title: "On the Waterfront", releaseYear: 1954, dateWatched: "May 24", rating: 4 },
+        { id: 20, title: "Power Ballad", releaseYear: 2026, dateWatched: "Jun 13", rating: 3 },
+        { id: 21, title: "Supergirl", releaseYear: 2026, dateWatched: "Jun 24", rating: 2 },
+        { id: 22, title: "The Odyssey", releaseYear: 2026, dateWatched: "Jul 16", rating: 5 },
+        { id: 23, title: "Spider-Man: Brand New Day", releaseYear: 2026, dateWatched: "Jul 30", rating: 3 }
+      ]
+    };
 
+    let allMoviesData = JSON.parse(localStorage.getItem('movies_all_years')) || initialDataByYear;
+    let currentYear = "2026";
+
+    const yearNavEl = document.getElementById('year-nav');
+    const pageTitleEl = document.getElementById('page-title');
+    const formTitleEl = document.getElementById('form-title');
     const movieListEl = document.getElementById('movie-list');
     const movieForm = document.getElementById('movie-form');
     const totalCountEl = document.getElementById('total-count');
     const avgRatingEl = document.getElementById('avg-rating');
+    const releaseYearInput = document.getElementById('release-year');
 
-    // แปลงตัวเลขคะแนนเป็นดาว ⭐
+    function renderYearTabs() {
+      yearNavEl.innerHTML = '';
+      const years = Object.keys(sheetMap).sort((a, b) => b - a);
+
+      years.forEach(year => {
+        const btn = document.createElement('button');
+        btn.className = `year-btn ${year === currentYear ? 'active' : ''}`;
+        btn.textContent = year;
+        btn.onclick = () => switchYear(year);
+        yearNavEl.appendChild(btn);
+      });
+
+      const syncBtn = document.createElement('button');
+      syncBtn.className = 'btn-sync';
+      syncBtn.innerHTML = '🔄 ดึงข้อมูลจาก Sheets';
+      syncBtn.onclick = () => loadSheetDataForCurrentYear(true);
+      yearNavEl.appendChild(syncBtn);
+    }
+
+    function parseCSV(csvText) {
+      const lines = csvText.trim().split(/\r?\n/);
+      if (lines.length <= 1) return [];
+      
+      const movies = [];
+      for (let i = 1; i < lines.length; i++) {
+        const cols = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.replace(/^"|"$/g, '').trim());
+        if (cols.length >= 4 && cols[1]) {
+          const rawRating = cols[4] || cols[3] || "3";
+          let numRating = parseInt(rawRating.replace(/\D/g, '')) || 3;
+          if (rawRating.includes('⭐') || rawRating.includes('⭐️')) {
+            numRating = (rawRating.match(/⭐|⭐️/g) || []).length || numRating;
+          }
+          movies.push({
+            id: Date.now() + i,
+            title: cols[1] || cols[0],
+            releaseYear: cols[2] || currentYear,
+            dateWatched: cols[3] || "-",
+            rating: Math.min(Math.max(numRating, 1), 5)
+          });
+        }
+      }
+      return movies;
+    }
+
+    async function loadSheetDataForCurrentYear(forceRefresh = false) {
+      const sheetId = sheetMap[currentYear];
+      if (!sheetId || sheetId === "LOCAL") {
+        renderMovies();
+        return;
+      }
+
+      if (allMoviesData[currentYear] && allMoviesData[currentYear].length > 0 && !forceRefresh) {
+        renderMovies();
+        return;
+      }
+
+      movieListEl.innerHTML = `<tr><td colspan="6" class="empty-state">⏳ กำลังโหลดข้อมูลจาก Google Sheets ของปี ${currentYear}...</td></tr>`;
+
+      try {
+        const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("Network response was not ok");
+        const csvText = await res.text();
+        const parsedMovies = parseCSV(csvText);
+
+        if (parsedMovies.length > 0) {
+          allMoviesData[currentYear] = parsedMovies;
+          localStorage.setItem('movies_all_years', JSON.stringify(allMoviesData));
+        }
+        renderMovies();
+      } catch (err) {
+        console.error("Error loading sheet:", err);
+        renderMovies();
+      }
+    }
+
+    function switchYear(year) {
+      currentYear = year;
+      renderYearTabs();
+      loadSheetDataForCurrentYear();
+    }
+
     function getStars(rating) {
       return '⭐️'.repeat(rating);
     }
 
-    // แสดงผลข้อมูลบนหน้าเว็บ
     function renderMovies() {
+      pageTitleEl.textContent = `🎬 ${currentYear} Movies I've Watched`;
+      formTitleEl.textContent = `➕ เพิ่มภาพยนตร์ที่ดูแล้ว (ปี ${currentYear})`;
+      releaseYearInput.placeholder = currentYear;
+
+      const movies = allMoviesData[currentYear] || [];
       movieListEl.innerHTML = '';
       let sumRating = 0;
 
-      movies.forEach((movie, index) => {
-        sumRating += Number(movie.rating);
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${index + 1}</td>
-          <td><strong>${movie.title}</strong></td>
-          <td>${movie.releaseYear}</td>
-          <td>${movie.dateWatched}</td>
-          <td class="rating-stars">${getStars(movie.rating)}</td>
-          <td>
-            <button class="btn-delete" onclick="deleteMovie(${movie.id})" title="ลบรายการ">✕</button>
-          </td>
+      if (movies.length === 0) {
+        movieListEl.innerHTML = `
+          <tr>
+            <td colspan="6" class="empty-state">
+              ยังไม่มีข้อมูลภาพยนตร์ในปี ${currentYear}<br>กดปุ่ม <strong>🔄 ดึงข้อมูลจาก Sheets</strong> ด้านบนเพื่อเชื่อมต่อข้อมูล
+            </td>
+          </tr>
         `;
-        movieListEl.appendChild(tr);
-      });
+      } else {
+        movies.forEach((movie, index) => {
+          sumRating += Number(movie.rating);
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${index + 1}</td>
+            <td><strong>${movie.title}</strong></td>
+            <td>${movie.releaseYear}</td>
+            <td>${movie.dateWatched}</td>
+            <td class="rating-stars">${getStars(movie.rating)}</td>
+            <td>
+              <button class="btn-delete" onclick="deleteMovie(${movie.id})" title="ลบรายการ">✕</button>
+            </td>
+          `;
+          movieListEl.appendChild(tr);
+        });
+      }
 
-      // อัปเดต สถิติ
       totalCountEl.textContent = movies.length;
       avgRatingEl.textContent = movies.length > 0 ? (sumRating / movies.length).toFixed(1) : '0.0';
 
-      // บันทึกลง LocalStorage
-      localStorage.setItem('movies_2026', JSON.stringify(movies));
+      localStorage.setItem('movies_all_years', JSON.stringify(allMoviesData));
     }
 
-    // ฟังก์ชันเพิ่มข้อมูลภาพยนตร์
     movieForm.addEventListener('submit', (e) => {
       e.preventDefault();
 
@@ -349,24 +528,26 @@
         rating: Number(document.getElementById('rating').value)
       };
 
-      movies.push(newMovie);
+      if (!allMoviesData[currentYear]) {
+        allMoviesData[currentYear] = [];
+      }
+
+      allMoviesData[currentYear].push(newMovie);
       renderMovies();
 
-      // ล้างค่าในฟอร์ม
       movieForm.reset();
       document.getElementById('rating').value = '3';
     });
 
-    // ฟังก์ชันลบภาพยนตร์
     function deleteMovie(id) {
       if (confirm('คุณต้องการลบภาพยนตร์เรื่องนี้ใช่หรือไม่?')) {
-        movies = movies.filter(m => m.id !== id);
+        allMoviesData[currentYear] = allMoviesData[currentYear].filter(m => m.id !== id);
         renderMovies();
       }
     }
 
-    // เริ่มการทำงานครั้งแรก
-    renderMovies();
+    renderYearTabs();
+    loadSheetDataForCurrentYear();
   </script>
 </body>
 </html>
