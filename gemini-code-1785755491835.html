@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2026 Movies I've Watched</title>
+  <style>
+    :root {
+      --bg-color: #0f172a;
+      --card-bg: #1e293b;
+      --accent-color: #6366f1;
+      --accent-hover: #4f46e5;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-color: #334155;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      padding: 2rem 1rem;
+      display: flex;
+      justify-content: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 900px;
+    }
+
+    header {
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+
+    header h1 {
+      font-size: 2.2rem;
+      margin-bottom: 0.5rem;
+      color: #ffffff;
+    }
+
+    header p {
+      color: var(--text-muted);
+    }
+
+    .stats-bar {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      flex: 1;
+      background: var(--card-bg);
+      padding: 1rem;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      text-align: center;
+    }
+
+    .stat-card .value {
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: var(--accent-color);
+    }
+
+    .stat-card .label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    /* Form Section */
+    .form-container {
+      background: var(--card-bg);
+      padding: 1.5rem;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      margin-bottom: 2rem;
+    }
+
+    .form-container h2 {
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr auto;
+      gap: 0.75rem;
+      align-items: end;
+    }
+
+    @media (max-width: 768px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .form-group label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    input, select {
+      background: var(--bg-color);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 0.6rem 0.8rem;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      outline: none;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--accent-color);
+    }
+
+    button.btn-add {
+      background: var(--accent-color);
+      color: white;
+      border: none;
+      padding: 0.65rem 1.2rem;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    button.btn-add:hover {
+      background: var(--accent-hover);
+    }
+
+    /* Table Section */
+    .table-container {
+      background: var(--card-bg);
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    th, td {
+      padding: 0.9rem 1.2rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    th {
+      background: rgba(0, 0, 0, 0.2);
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .rating-stars {
+      color: #f59e0b;
+      letter-spacing: 2px;
+    }
+
+    .btn-delete {
+      background: transparent;
+      color: #ef4444;
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+    }
+
+    .btn-delete:hover {
+      background: rgba(239, 68, 68, 0.1);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h1>🎬 2026 Movies I've Watched</h1>
+      <p>รายการบันทึกภาพยนตร์ที่รับชมแล้ว</p>
+    </header>
+
+    <div class="stats-bar">
+      <div class="stat-card">
+        <div class="value" id="total-count">0</div>
+        <div class="label">จำนวนเรื่องทั้งหมด</div>
+      </div>
+      <div class="stat-card">
+        <div class="value" id="avg-rating">0.0</div>
+        <div class="label">คะแนนเฉลี่ย</div>
+      </div>
+    </div>
+
+    <!-- Form Add Data -->
+    <div class="form-container">
+      <h2>➕ เพิ่มภาพยนตร์ที่ดูแล้ว</h2>
+      <form id="movie-form" class="form-grid">
+        <div class="form-group">
+          <label for="title">ชื่อภาพยนตร์</label>
+          <input type="text" id="title" placeholder="เช่น Avatar 3" required>
+        </div>
+        <div class="form-group">
+          <label for="release-year">ปีที่ฉาย</label>
+          <input type="number" id="release-year" placeholder="2026" min="1900" max="2100" required>
+        </div>
+        <div class="form-group">
+          <label for="date-watched">วันที่ดู</label>
+          <input type="text" id="date-watched" placeholder="เช่น Aug 10" required>
+        </div>
+        <div class="form-group">
+          <label for="rating">คะแนน</label>
+          <select id="rating" required>
+            <option value="5">⭐️⭐️⭐️⭐️⭐️ (5)</option>
+            <option value="4">⭐️⭐️⭐️⭐️ (4)</option>
+            <option value="3" selected>⭐️⭐️⭐️ (3)</option>
+            <option value="2">⭐️⭐️ (2)</option>
+            <option value="1">⭐️ (1)</option>
+          </select>
+        </div>
+        <button type="submit" class="btn-add">เพิ่ม</button>
+      </form>
+    </div>
+
+    <!-- Movie Table -->
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 50px;">#</th>
+            <th>ชื่อภาพยนตร์</th>
+            <th>ปีที่ฉาย</th>
+            <th>วันที่ดู</th>
+            <th>คะแนน</th>
+            <th style="width: 50px;"></th>
+          </tr>
+        </thead>
+        <tbody id="movie-list">
+          <!-- Dynamically Generated -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    // ข้อมูลเริ่มต้น 23 เรื่องจากไฟล์ Google Sheet
+    const initialMovies = [
+      { id: 1, title: "Jurassic World: Rebirth", releaseYear: 2025, dateWatched: "Jan 18", rating: 2 },
+      { id: 2, title: "One Battle After Another", releaseYear: 2025, dateWatched: "Jan 18", rating: 3 },
+      { id: 3, title: "It Was Just an Accident", releaseYear: 2025, dateWatched: "Jan 23", rating: 3 },
+      { id: 4, title: "Train Dreams", releaseYear: 2025, dateWatched: "Feb 3", rating: 4 },
+      { id: 5, title: "The Secret Agent", releaseYear: 2025, dateWatched: "Feb 5", rating: 3 },
+      { id: 6, title: "28 Years Later", releaseYear: 2025, dateWatched: "Feb 9", rating: 2 },
+      { id: 7, title: "Sentimental Value", releaseYear: 2025, dateWatched: "Feb 14", rating: 3 },
+      { id: 8, title: "Hamnet", releaseYear: 2025, dateWatched: "Feb 19", rating: 4 },
+      { id: 9, title: "Bugonia", releaseYear: 2025, dateWatched: "Mar 3", rating: 4 },
+      { id: 10, title: "The Voice of Hind Rajab", releaseYear: 2025, dateWatched: "Mar 5", rating: 4 },
+      { id: 11, title: "Marty Supreme", releaseYear: 2025, dateWatched: "Mar 12", rating: 4 },
+      { id: 12, title: "Zootopia 2", releaseYear: 2025, dateWatched: "Mar 15", rating: 3 },
+      { id: 13, title: "Hoppers", releaseYear: 2026, dateWatched: "Mar 15", rating: 3 },
+      { id: 14, title: "Project Hail Mary", releaseYear: 2026, dateWatched: "Mar 21", rating: 3 },
+      { id: 15, title: "The Super Mario Galaxy Movie", releaseYear: 2026, dateWatched: "Apr 5", rating: 3 },
+      { id: 16, title: "Michael", releaseYear: 2026, dateWatched: "Apr 25", rating: 3 },
+      { id: 17, title: "28 Years Later: The Bone Temple", releaseYear: 2026, dateWatched: "Apr 27", rating: 3 },
+      { id: 18, title: "Star Wars: The Mandalorian and Grogu", releaseYear: 2026, dateWatched: "May 21", rating: 3 },
+      { id: 19, title: "On the Waterfront", releaseYear: 1954, dateWatched: "May 24", rating: 4 },
+      { id: 20, title: "Power Ballad", releaseYear: 2026, dateWatched: "Jun 13", rating: 3 },
+      { id: 21, title: "Supergirl", releaseYear: 2026, dateWatched: "Jun 24", rating: 2 },
+      { id: 22, title: "The Odyssey", releaseYear: 2026, dateWatched: "Jul 16", rating: 5 },
+      { id: 23, title: "Spider-Man: Brand New Day", releaseYear: 2026, dateWatched: "Jul 30", rating: 3 }
+    ];
+
+    // โหลดข้อมูลจาก LocalStorage หรือใช้ข้อมูลเริ่มต้น
+    let movies = JSON.parse(localStorage.getItem('movies_2026')) || initialMovies;
+
+    const movieListEl = document.getElementById('movie-list');
+    const movieForm = document.getElementById('movie-form');
+    const totalCountEl = document.getElementById('total-count');
+    const avgRatingEl = document.getElementById('avg-rating');
+
+    // แปลงตัวเลขคะแนนเป็นดาว ⭐
+    function getStars(rating) {
+      return '⭐️'.repeat(rating);
+    }
+
+    // แสดงผลข้อมูลบนหน้าเว็บ
+    function renderMovies() {
+      movieListEl.innerHTML = '';
+      let sumRating = 0;
+
+      movies.forEach((movie, index) => {
+        sumRating += Number(movie.rating);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${index + 1}</td>
+          <td><strong>${movie.title}</strong></td>
+          <td>${movie.releaseYear}</td>
+          <td>${movie.dateWatched}</td>
+          <td class="rating-stars">${getStars(movie.rating)}</td>
+          <td>
+            <button class="btn-delete" onclick="deleteMovie(${movie.id})" title="ลบรายการ">✕</button>
+          </td>
+        `;
+        movieListEl.appendChild(tr);
+      });
+
+      // อัปเดต สถิติ
+      totalCountEl.textContent = movies.length;
+      avgRatingEl.textContent = movies.length > 0 ? (sumRating / movies.length).toFixed(1) : '0.0';
+
+      // บันทึกลง LocalStorage
+      localStorage.setItem('movies_2026', JSON.stringify(movies));
+    }
+
+    // ฟังก์ชันเพิ่มข้อมูลภาพยนตร์
+    movieForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const newMovie = {
+        id: Date.now(),
+        title: document.getElementById('title').value.trim(),
+        releaseYear: Number(document.getElementById('release-year').value),
+        dateWatched: document.getElementById('date-watched').value.trim(),
+        rating: Number(document.getElementById('rating').value)
+      };
+
+      movies.push(newMovie);
+      renderMovies();
+
+      // ล้างค่าในฟอร์ม
+      movieForm.reset();
+      document.getElementById('rating').value = '3';
+    });
+
+    // ฟังก์ชันลบภาพยนตร์
+    function deleteMovie(id) {
+      if (confirm('คุณต้องการลบภาพยนตร์เรื่องนี้ใช่หรือไม่?')) {
+        movies = movies.filter(m => m.id !== id);
+        renderMovies();
+      }
+    }
+
+    // เริ่มการทำงานครั้งแรก
+    renderMovies();
+  </script>
+</body>
+</html>
